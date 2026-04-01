@@ -107,6 +107,7 @@ function Dashboard({ token, onLogout }) {
   const [bid, setBid] = useState("");
   const [filter, setFilter] = useState("");
   const [activeTab, setActiveTab] = useState("auction");
+  const [highestSold, setHighestSold] = useState(null);
 
   const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
@@ -131,6 +132,7 @@ function Dashboard({ token, onLogout }) {
     if (!selectedPlayer || !selectedTeam || !bid) return alert("Select player, team, and bid");
     try {
       await fetchAPI(`${BASE_URL}/bid?player_id=${selectedPlayer.id}&team_id=${selectedTeam.id}&price=${bid}`, { method: "POST", headers: authHeaders });
+      setHighestSold({ player: selectedPlayer.name, team: selectedTeam.name, price: parseInt(bid), category: selectedPlayer.category });
       setBid("");
       load();
       alert("✅ Player sold successfully!");
@@ -174,6 +176,20 @@ function Dashboard({ token, onLogout }) {
 
   return (
     <div style={{ minHeight: "100vh", background: "#0a0e27", color: "#e2e8f0", fontFamily: "'Segoe UI', Tahoma, sans-serif" }}>
+      {highestSold && (
+        <div style={{ background: "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)", padding: "24px 20px", textAlign: "center", borderBottom: "3px solid #fbbf24", boxShadow: "0 8px 32px rgba(245, 158, 11, 0.3)" }}>
+          <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+            <div style={{ fontSize: "32px", marginBottom: "8px" }}>🎉🌟 SOLD! 🌟🎉</div>
+            <h2 style={{ fontSize: "28px", fontWeight: "800", margin: "0 0 8px", color: "#fff" }}>{highestSold.player}</h2>
+            <p style={{ fontSize: "16px", color: "rgba(255,255,255,0.9)", margin: "4px 0" }}>
+              🏆 Bought by <strong>{highestSold.team}</strong>
+            </p>
+            <p style={{ fontSize: "20px", fontWeight: "700", color: "#fff", margin: "8px 0" }}>
+              💰 ₹{highestSold.price.toLocaleString()} ({highestSold.category})
+            </p>
+          </div>
+        </div>
+      )}
       <nav style={{ background: "rgba(15, 23, 42, 0.8)", borderBottom: "1px solid rgba(226,232,240,0.1)", backdropFilter: "blur(10px)", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 100 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ fontSize: "28px" }}>🏏</div>
