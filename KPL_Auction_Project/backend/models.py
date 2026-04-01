@@ -5,7 +5,7 @@ class Player(Base):
     __tablename__ = "players"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    name = Column(String, unique=True)
     category = Column(String)
     base_price = Column(Integer)
     sold_price = Column(Integer, default=0)
@@ -17,7 +17,7 @@ class Team(Base):
     __tablename__ = "teams"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    name = Column(String, unique=True)
     budget = Column(Integer, default=10000)
     spent = Column(Integer, default=0)
     players_count = Column(Integer, default=0)

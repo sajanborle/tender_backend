@@ -1,5 +1,9 @@
 from database import Base, engine
-from models import Player
+from models import Player, Team
+
+print("Dropping tables...")
+
+Base.metadata.drop_all(bind=engine)
 
 print("Creating tables...")
 
