@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const BASE_URL = "https://2348-114-143-92-37.ngrok-free.app";
+const BASE_URL = "https://88d8-114-143-92-37.ngrok-free.app";
 
 export default function App() {
   const [players, setPlayers] = useState([]);
@@ -193,6 +193,55 @@ export default function App() {
           borderRadius: "10px"
         }}>
           ❌ UNDO
+        </button>
+
+        <button onClick={async () => {
+          if (!token) return alert('Login required');
+          if (!selectedPlayer) return alert('Select a player to unsold');
+          try {
+            await fetchAPI(`${BASE_URL}/unsold?player_id=${selectedPlayer.id}`, {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            loadData();
+            alert('Player unsold successfully');
+          } catch (error) {
+            alert('Unsold failed: ' + error.message);
+          }
+        }} style={{
+          background: "#0ea5e9",
+          border: "none",
+          padding: "10px 20px",
+          fontWeight: "bold",
+          color: "white",
+          cursor: "pointer",
+          borderRadius: "10px"
+        }}>
+          ♻️ UNSOLD
+        </button>
+
+        <button onClick={async () => {
+          if (!token) return alert('Login required');
+          try {
+            await fetchAPI(`${BASE_URL}/reset`, {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            loadData();
+            alert('Auction reset complete.');
+          } catch (error) {
+            alert('Reset failed: ' + error.message);
+          }
+        }} style={{
+          background: "#22c55e",
+          border: "none",
+          padding: "10px 20px",
+          fontWeight: "bold",
+          color: "white",
+          cursor: "pointer",
+          borderRadius: "10px"
+        }}>
+          🔁 RESET
         </button>
       </div>
 

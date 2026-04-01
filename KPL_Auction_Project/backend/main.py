@@ -142,10 +142,10 @@ def place_bid(player_id: int, team_id: int, price: int, current_user=Depends(get
     team = db.query(Team).get(team_id)
 
     if not player or not team:
-        return {"error": "Invalid data"}
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid player or team")
 
     if player.status != "Unsold":
-        return {"error": "Player already sold"}
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Player already sold")
 
     # update player
     player.sold_price = price
@@ -197,31 +197,76 @@ def filter_players(status: str = None, category: str = None, db=Depends(get_db))
     return query.all()
 
 @app.post("/undo_bid")
-def undo_bid(player_id: int, db=Depends(get_db)):
+def undo_bid(player_id: int, current_user=Depends(get_current_user), db=Depends(get_db)):
     global current_data
 
     player = db.query(Player).get(player_id)
 
     if not player:
-        return {"error": "Player not found"}
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Player not found")
 
     if player.status != "Sold":
-        return {"error": "Player is not sold"}
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Player is not sold")
 
-    # 🔥 find team
     team = db.query(Team).filter(Team.name == player.team).first()
-
     if team:
-        # reverse team stats
-        team.spent -= player.sold_price
-        team.players_count -= 1
+        team.spent = max(0, team.spent - player.sold_price)
+        team.players_count = max(0, team.players_count - 1)
 
-    # 🔥 reset player
     player.sold_price = 0
     player.team = "Unsold"
     player.status = "Unsold"
 
     db.commit()
+
+    current_data = {
+        "player": "Undo Done",
+        "bid": 0,
+        "team": ""
+    }
+
+    for client in clients:
+        import asyncio
+        asyncio.create_task(client.send_text(json.dumps(current_data)))
+
+    return {"message": "Undo successful"}
+
+
+@app.post("/unsold")
+def unsold(player_id: int, current_user=Depends(get_current_user), db=Depends(get_db)):
+    player = db.query(Player).get(player_id)
+    if not player:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Player not found")
+
+    if player.status == "Unsold":
+        return {"message": "Player already unsold"}
+
+    team = db.query(Team).filter(Team.name == player.team).first()
+    if team:
+        team.spent = max(0, team.spent - player.sold_price)
+        team.players_count = max(0, team.players_count - 1)
+
+    player.sold_price = 0
+    player.team = "Unsold"
+    player.status = "Unsold"
+    db.commit()
+
+    return {"message": "Player unsold successfully"}
+
+
+@app.post("/reset")
+def reset_auction(current_user=Depends(get_current_user), db=Depends(get_db)):
+    for player in db.query(Player).all():
+        player.sold_price = 0
+        player.team = "Unsold"
+        player.status = "Unsold"
+
+    for team in db.query(Team).all():
+        team.spent = 0
+        team.players_count = 0
+
+    db.commit()
+    return {"message": "Auction reset complete"}
 
     # 🔥 LIVE UPDATE RESET
     current_data = {
