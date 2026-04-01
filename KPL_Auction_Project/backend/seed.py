@@ -3,6 +3,11 @@ from models import Player, Team
 
 db = SessionLocal()
 
+# Clear existing data
+db.query(Player).delete()
+db.query(Team).delete()
+db.commit()
+
 teams = [
     "Sagar Shigwan",
     "Mukund Borle",
@@ -17,71 +22,71 @@ teams = [
 players = [
 
 # ⭐ STAR PLAYERS
-("Nitin Borle","Star",1000),
-("Rohan Kasrung","Star",1000),
-("Suraj Kasrung","Star",1000),
-("Prashant Kasrung","Star",1000),
-("Sajan Borle","Star",1000),
-("Vinit Pawar","Star",1000),
-("Pratesh Kobnak","Star",1000),
-("Vaibhav Karandekar","Star",1000),
+("Nitin Borle","Star",500),
+("Rohan Kasrung","Star",500),
+("Suraj Kasrung","Star",500),
+("Prashant Kasrung","Star",500),
+("Sajan Borle","Star",500),
+("Vinit Pawar","Star",500),
+("Pratesh Kobnak","Star",500),
+("Vaibhav Karandekar","Star",500),
 
 # A1
-("Amit Shigwan","A1",700),
-("Rupesh Borle","A1",700),
-("Tejas Pawar","A1",700),
-("Hitesh Kobnak","A1",700),
-("Parag Kasrung","A1",700),
-("Milind Pawar","A1",700),
-("Ashish Pawar","A1",700),
-("Abhinath Kobnak","A1",700),
+("Amit Shigwan","A1",400),
+("Rupesh Borle","A1",400),
+("Tejas Pawar","A1",400),
+("Hitesh Kobnak","A1",400),
+("Parag Kasrung","A1",400),
+("Milind Pawar","A1",400),
+("Ashish Pawar","A1",400),
+("Abhinath Kobnak","A1",400),
 
 # A2
-("Ajay Gije","A2",700),
-("Sunny Bhuvad","A2",700),
-("Vijay Borle","A2",700),
-("Abhi Borle","A2",700),
-("Tejas Kasrung","A2",700),
-("Sahil Bhuvad","A2",700),
-("Akshay Kobnak","A2",700),
-("Rakesh Kobnak","A2",700),
+("Ajay Gije","A2",400),
+("Sunny Bhuvad","A2",400),
+("Vijay Borle","A2",400),
+("Abhi Borle","A2",400),
+("Tejas Kasrung","A2",400),
+("Sahil Bhuvad","A2",400),
+("Akshay Kobnak","A2",400),
+("Rakesh Kobnak","A2",400),
 
 # A3
-("Harshad Kobnak","A3",700),
-("Hemant Kobnak","A3",700),
-("Mayur Kobnak","A3",700),
-("Sanket Kasrung","A3",700),
-("Dilesh Borle","A3",700),
-("Kunal Kobnak","A3",700),
-("Keyush Shigwan","A3",700),
-("Kailas Kobnak","A3",700),
+("Harshad Kobnak","A3",400),
+("Hemant Kobnak","A3",400),
+("Mayur Kobnak","A3",400),
+("Sanket Kasrung","A3",400),
+("Dilesh Borle","A3",400),
+("Kunal Kobnak","A3",400),
+("Keyush Shigwan","A3",400),
+("Kailas Kobnak","A3",400),
 
 # B1
-("Hemant Borle","B1",400),
-("Omkar Rahatwal","B1",400),
-("Rutesh Dhadve","B1",400),
-("Narendra Gije","B1",400),
-("Naitik Pawar","B1",400),
-("Hiren Pawar","B1",400),
-("Vinay Sawant","B1",400),
-("Shubham Pawar","B1",400),
+("Hemant Borle","B1",300),
+("Omkar Rahatwal","B1",300),
+("Rutesh Dhadve","B1",300),
+("Narendra Gije","B1",300),
+("Naitik Pawar","B1",300),
+("Hiren Pawar","B1",300),
+("Vinay Sawant","B1",300),
+("Shubham Pawar","B1",300),
 
 # B2
-("Adarsh Kasrung","B2",400),
-("Maheshwar Kobnak","B2",400),
-("Vrushabh Shigwan","B2",400),
-("Jignesh Kasrung","B2",400),
-("Vivek Shigwan","B2",400),
-("Niket Sawant","B2",400),
-("Piyush Sawant","B2",400),
-("Nitesh Borle","B2",400),
+("Adarsh Kasrung","B2",300),
+("Maheshwar Kobnak","B2",300),
+("Vrushabh Shigwan","B2",300),
+("Jignesh Kasrung","B2",300),
+("Vivek Shigwan","B2",300),
+("Niket Sawant","B2",300),
+("Piyush Sawant","B2",300),
+("Nitesh Borle","B2",300),
 
 # B3
-("Pranay Gije","B3",400),
-("Nil Gije","B3",400),
-("Akash Pawar","B3",400),
-("Ashwin Gije","B3",400),
-("Jignesh Shigwan","B3",400),
+("Pranay Gije","B3",300),
+("Nil Gije","B3",300),
+("Akash Pawar","B3",300),
+("Ashwin Gije","B3",300),
+("Jignesh Shigwan","B3",300),
 ("Amol Pawar","B3",400),
 ("Shrikant Kasrung","B3",400),
 

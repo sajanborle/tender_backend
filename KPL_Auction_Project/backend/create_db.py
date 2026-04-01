@@ -1,5 +1,5 @@
 from database import Base, engine
-from models import Player, Team
+from models import Player, Team, User
 
 print("Dropping tables...")
 
