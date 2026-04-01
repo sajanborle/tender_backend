@@ -117,3 +117,43 @@ def filter_players(status: str = None, category: str = None, db=Depends(get_db))
         query = query.filter(Player.category == category)
 
     return query.all()
+
+@app.post("/undo_bid")
+def undo_bid(player_id: int, db=Depends(get_db)):
+    global current_data
+
+    player = db.query(Player).get(player_id)
+
+    if not player:
+        return {"error": "Player not found"}
+
+    if player.status != "Sold":
+        return {"error": "Player is not sold"}
+
+    # 🔥 find team
+    team = db.query(Team).filter(Team.name == player.team).first()
+
+    if team:
+        # reverse team stats
+        team.spent -= player.sold_price
+        team.players_count -= 1
+
+    # 🔥 reset player
+    player.sold_price = 0
+    player.team = "Unsold"
+    player.status = "Unsold"
+
+    db.commit()
+
+    # 🔥 LIVE UPDATE RESET
+    current_data = {
+        "player": "Undo Done",
+        "bid": 0,
+        "team": ""
+    }
+
+    for client in clients:
+        import asyncio
+        asyncio.create_task(client.send_text(json.dumps(current_data)))
+
+    return {"message": "Undo successful"}
