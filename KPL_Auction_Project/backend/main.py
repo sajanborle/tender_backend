@@ -1,7 +1,7 @@
 from fastapi import FastAPI, WebSocket, Depends
 import json
-from database import SessionLocal, Base, engine
-from models import Player, Team
+from .database import SessionLocal, Base, engine
+from .models import Player, Team
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
