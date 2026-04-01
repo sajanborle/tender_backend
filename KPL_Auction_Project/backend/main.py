@@ -1,7 +1,7 @@
 from fastapi import FastAPI, WebSocket, Depends
 import json
-from KPL_Auction_Project.backend.database import SessionLocal, engine, Base
-from KPL_Auction_Project.backend.models import Player, Team
+from database import SessionLocal, Base, engine
+from models import Player, Team
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -23,7 +23,8 @@ def get_db():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[ "http://localhost:5173",
+        "https://ccde-114-143-92-37.ngrok-free.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
