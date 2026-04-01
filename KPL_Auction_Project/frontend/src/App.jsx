@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const BASE_URL = "https://84cb-114-143-92-37.ngrok-free.app";
+const BASE_URL = "https://2348-114-143-92-37.ngrok-free.app";
 
 export default function App() {
   const [players, setPlayers] = useState([]);
@@ -11,49 +11,100 @@ export default function App() {
   const [bid, setBid] = useState("");
   const [filter, setFilter] = useState("");
 
-  const fetchAPI = (url) => {
-    return fetch(url, {
-      headers: {
-        "ngrok-skip-browser-warning": "true"
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [token, setToken] = useState(localStorage.getItem("token") || "");
+
+  const fetchAPI = (url, options = {}) => {
+    const headers = {
+      "ngrok-skip-browser-warning": "true",
+      "Content-Type": "application/json",
+      ...options.headers
+    };
+
+    return fetch(url, { ...options, headers }).then(async (res) => {
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || res.statusText);
       }
-    }).then(res => res.json());
+      return res.json();
+    });
   };
 
   const loadData = () => {
-    fetchAPI(`${BASE_URL}/players`).then(setPlayers);
-    fetchAPI(`${BASE_URL}/teams`).then(setTeams);
-    fetchAPI(`${BASE_URL}/leaderboard`).then(setLeaderboard);
+    fetchAPI(`${BASE_URL}/players`).then(setPlayers).catch(console.error);
+    fetchAPI(`${BASE_URL}/teams`).then(setTeams).catch(console.error);
+    fetchAPI(`${BASE_URL}/leaderboard`).then(setLeaderboard).catch(console.error);
   };
 
   useEffect(() => {
     loadData();
   }, []);
 
+  const register = async () => {
+    try {
+      await fetchAPI(`${BASE_URL}/register`, {
+        method: "POST",
+        body: JSON.stringify({ username, password })
+      });
+      alert("Registered successfully. Now login.");
+    } catch (error) {
+      alert("Register failed: " + error.message);
+    }
+  };
+
+  const login = async () => {
+    try {
+      const data = await fetchAPI(`${BASE_URL}/login`, {
+        method: "POST",
+        body: JSON.stringify({ username, password })
+      });
+      localStorage.setItem("token", data.access_token);
+      setToken(data.access_token);
+      alert("Login successful");
+    } catch (error) {
+      alert("Login failed: " + error.message);
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    setToken("");
+  };
+
+  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+
   const placeBid = async () => {
-    if (!selectedPlayer || !selectedTeam || !bid) return;
+    if (!token) return alert("Login is required for bidding");
+    if (!selectedPlayer || !selectedTeam || !bid) return alert("Select player, team and bid amount");
 
-    await fetch(`${BASE_URL}/bid?player_id=${selectedPlayer.id}&team_id=${selectedTeam.id}&price=${bid}`, {
-      method: "POST",
-      headers: {
-        "ngrok-skip-browser-warning": "true"
-      }
-    });
-
-    setBid("");
-    loadData();
+    try {
+      await fetchAPI(`${BASE_URL}/bid?player_id=${selectedPlayer.id}&team_id=${selectedTeam.id}&price=${bid}`, {
+        method: "POST",
+        headers: authHeaders
+      });
+      setBid("");
+      loadData();
+      alert("Bid placed successfully");
+    } catch (error) {
+      alert("Bid failed: " + error.message);
+    }
   };
 
   const undoBid = async () => {
-    if (!selectedPlayer) return;
+    if (!token) return alert("Login is required to undo");
+    if (!selectedPlayer) return alert("Select player to undo");
 
-    await fetch(`${BASE_URL}/undo_bid?player_id=${selectedPlayer.id}`, {
-      method: "POST",
-      headers: {
-        "ngrok-skip-browser-warning": "true"
-      }
-    });
-
-    loadData();
+    try {
+      await fetchAPI(`${BASE_URL}/undo_bid?player_id=${selectedPlayer.id}`, {
+        method: "POST",
+        headers: authHeaders
+      });
+      loadData();
+      alert("Undo successful");
+    } catch (error) {
+      alert("Undo failed: " + error.message);
+    }
   };
 
   return (
@@ -71,6 +122,21 @@ export default function App() {
       }}>
         🏏 KPL AUCTION
       </h1>
+
+      <div style={{
+        display: "flex",
+        gap: "8px",
+        justifyContent: "center",
+        marginBottom: "20px",
+        flexWrap: "wrap"
+      }}>
+        <input value={username} onChange={e => setUsername(e.target.value)} placeholder="Username" />
+        <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" />
+        <button onClick={register}>Register</button>
+        <button onClick={login}>Login</button>
+        <button onClick={logout}>Logout</button>
+        <span style={{ marginLeft: "10px" }}>{token ? "Logged in" : "Not logged in"}</span>
+      </div>
 
       {/* 🔥 AUCTION PANEL */}
       <div style={{
@@ -103,6 +169,7 @@ export default function App() {
           placeholder="Bid ₹"
           value={bid}
           onChange={e => setBid(e.target.value)}
+          type="number"
         />
 
         <button onClick={placeBid} style={{
