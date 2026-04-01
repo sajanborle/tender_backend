@@ -10,9 +10,9 @@ export default function App() {
   const [filter, setFilter] = useState("");
 
   const loadData = () => {
-    fetch("https://ccde-114-143-92-37.ngrok-free.app/players").then(r=>r.json()).then(setPlayers);
-    fetch("https://ccde-114-143-92-37.ngrok-free.app/teams").then(r=>r.json()).then(setTeams);
-    fetch("https://ccde-114-143-92-37.ngrok-free.app/leaderboard").then(r=>r.json()).then(setLeaderboard);
+    fetch(" https://060e-114-143-92-37.ngrok-free.app/players").then(r=>r.json()).then(setPlayers);
+    fetch(" https://060e-114-143-92-37.ngrok-free.app/teams").then(r=>r.json()).then(setTeams);
+    fetch(" https://060e-114-143-92-37.ngrok-free.app/leaderboard").then(r=>r.json()).then(setLeaderboard);
   };
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export default function App() {
   const placeBid = async () => {
     if (!selectedPlayer || !selectedTeam || !bid) return;
 
-    await fetch(`https://ccde-114-143-92-37.ngrok-free.app/bid?player_id=${selectedPlayer.id}&team_id=${selectedTeam.id}&price=${bid}`, {
+    await fetch(` https://060e-114-143-92-37.ngrok-free.app/bid?player_id=${selectedPlayer.id}&team_id=${selectedTeam.id}&price=${bid}`, {
       method: "POST"
     });
 
