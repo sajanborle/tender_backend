@@ -44,7 +44,7 @@ function AuthForm({ onAuthSuccess }) {
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
         <div style={{ width: "100%", maxWidth: "400px" }}>
           <div style={{ marginBottom: "40px" }}>
-            <h1 style={{ fontSize: "32px", fontWeight: "700", color: "#fff", margin: "0 0 8px" }}>🏏 KPL Auction</h1>
+            <h1 style={{ fontSize: "32px", fontWeight: "700", color: "#f41313", margin: "0 0 8px" }}>🏏 KPL Auction</h1>
             <p style={{ fontSize: "16px", color: "#94a3b8", margin: 0 }}>Secure Cricket Player Auction Platform</p>
           </div>
 
@@ -226,7 +226,7 @@ function Dashboard({ token, onLogout }) {
 
         {activeTab === "auction" && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "24px" }}>
-            <div style={{ background: "rgba(226, 232, 240, 0.05)", border: "1px solid rgba(226,232,240,0.1)", borderRadius: "12px", padding: "24px" }}>
+            <div style={{ background: "rgba(226, 232, 240, 0.05)", border: "1px solid rgba(69, 225, 22, 0.1)", borderRadius: "12px", padding: "24px" }}>
               <h2 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "16px" }}>Place Your Bid</h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "12px", marginBottom: "16px" }}>
                 <div>
