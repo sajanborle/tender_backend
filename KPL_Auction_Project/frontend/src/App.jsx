@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const BASE_URL = "https://2a41-114-143-92-37.ngrok-free.app";
+const BASE_URL = " https://660f-114-143-92-37.ngrok-free.app";
 
 export default function App() {
   const [players, setPlayers] = useState([]);
