@@ -195,7 +195,7 @@ function Dashboard({ token, onLogout }) {
           <div style={{ fontSize: "28px" }}>🏏</div>
           <div>
             <h1 style={{ margin: "0", fontSize: "20px", fontWeight: "700" }}>KPL Auction</h1>
-            <p style={{ margin: "0", fontSize: "12px", color: "#94a3b8" }}>Live Bidding Platform</p>
+            <p style={{ margin: "0", fontSize: "12px", color: "#12db07" }}>Live Bidding Platform</p>
           </div>
         </div>
         <button onClick={onLogout} style={{ padding: "8px 16px", borderRadius: "6px", border: "none", background: "#ef4444", color: "white", cursor: "pointer", fontWeight: "600", fontSize: "14px" }}>Logout</button>
