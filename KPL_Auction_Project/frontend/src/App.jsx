@@ -2,147 +2,332 @@ import { useEffect, useState } from "react";
 
 const BASE_URL = "https://88d8-114-143-92-37.ngrok-free.app";
 
-const fetchAPI = (url, options = {}) => {
-  return fetch(url, {
+const fetchAPI = async (url, options = {}) => {
+  const res = await fetch(url, {
     headers: {
       "ngrok-skip-browser-warning": "true",
       "Content-Type": "application/json",
       ...options.headers
     },
     ...options
-  }).then(res => res.json());
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error(text || res.statusText);
+  return text ? JSON.parse(text) : {};
 };
 
-// 🔐 AUTH PAGE
-function AuthForm({ setToken }) {
+function AuthForm({ onAuthSuccess }) {
   const [mode, setMode] = useState("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const submit = async () => {
-    const endpoint = mode === "login" ? "/login" : "/register";
-
+    if (!username || !password) return alert("Enter username and password");
+    setLoading(true);
     try {
-      const res = await fetchAPI(`${BASE_URL}${endpoint}`, {
+      const data = await fetchAPI(`${BASE_URL}/${mode}`, {
         method: "POST",
         body: JSON.stringify({ username, password })
       });
-
-      if (mode === "login") {
-        localStorage.setItem("token", res.access_token);
-        setToken(res.access_token);
-      } else {
-        alert("Registered successfully");
-        setMode("login");
-      }
-
-    } catch {
-      alert("Auth failed");
+      localStorage.setItem("token", data.access_token);
+      onAuthSuccess(data.access_token);
+    } catch (err) {
+      alert(`${mode} failed: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{
-      height:"100vh",
-      display:"flex",
-      justifyContent:"center",
-      alignItems:"center",
-      background:"linear-gradient(#020617,#0b1c3f)"
-    }}>
-      <div style={{
-        padding:"30px",
-        background:"#111",
-        borderRadius:"15px",
-        width:"300px"
-      }}>
-        <h2 style={{textAlign:"center"}}>{mode === "login" ? "Login" : "Register"}</h2>
+    <div style={{ minHeight: "100vh", display: "flex", background: "linear-gradient(135deg, #0a1428 0%, #0f1f35 100%)", fontFamily: "'Segoe UI', Tahoma, sans-serif" }}>
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+        <div style={{ width: "100%", maxWidth: "400px" }}>
+          <div style={{ marginBottom: "40px" }}>
+            <h1 style={{ fontSize: "32px", fontWeight: "700", color: "#fff", margin: "0 0 8px" }}>🏏 KPL Auction</h1>
+            <p style={{ fontSize: "16px", color: "#94a3b8", margin: 0 }}>Secure Cricket Player Auction Platform</p>
+          </div>
 
-        <input placeholder="Username" value={username} onChange={e=>setUsername(e.target.value)} />
-        <input type="password" placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)} />
+          <div style={{ background: "rgba(226, 232, 240, 0.05)", borderRadius: "12px", border: "1px solid rgba(226, 232, 240, 0.1)", padding: "32px", backdropFilter: "blur(10px)" }}>
+            <h2 style={{ fontSize: "20px", fontWeight: "600", color: "#f8fafc", marginBottom: "24px" }}>
+              {mode === "login" ? "Welcome Back" : "Create Account"}
+            </h2>
 
-        <button onClick={submit} style={{width:"100%", marginTop:"10px"}}>
-          {mode}
-        </button>
+            <input
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              placeholder="Username"
+              style={{ width: "100%", padding: "12px 14px", marginBottom: "12px", borderRadius: "8px", border: "1px solid rgba(226,232,240,0.2)", background: "rgba(15, 23, 42, 0.6)", color: "#f8fafc", fontSize: "14px", boxSizing: "border-box" }}
+            />
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Password"
+              style={{ width: "100%", padding: "12px 14px", marginBottom: "24px", borderRadius: "8px", border: "1px solid rgba(226,232,240,0.2)", background: "rgba(15, 23, 42, 0.6)", color: "#f8fafc", fontSize: "14px", boxSizing: "border-box" }}
+            />
 
-        <p onClick={()=>setMode(mode==="login"?"register":"login")} style={{cursor:"pointer"}}>
-          Switch to {mode==="login"?"Register":"Login"}
-        </p>
+            <button
+              onClick={submit}
+              disabled={loading}
+              style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "none", background: "#0ea5e9", color: "white", fontWeight: "600", cursor: "pointer", fontSize: "15px", marginBottom: "16px" }}
+            >
+              {loading ? "Loading..." : mode === "login" ? "Sign In" : "Create Account"}
+            </button>
+
+            <div style={{ textAlign: "center", color: "#94a3b8", fontSize: "14px" }}>
+              {mode === "login" ? "Don't have an account? " : "Already have an account? "}
+              <span onClick={() => setMode(mode === "login" ? "register" : "login")} style={{ color: "#38bdf8", cursor: "pointer", fontWeight: "600" }}>
+                {mode === "login" ? "Sign Up" : "Sign In"}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, background: "linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", padding: "40px", minHeight: "100vh" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: "80px", marginBottom: "24px" }}>🏆</div>
+          <h2 style={{ fontSize: "28px", fontWeight: "700", marginBottom: "16px" }}>Live Auction</h2>
+          <p style={{ fontSize: "16px", color: "rgba(255,255,255,0.8)", lineHeight: "1.6" }}>
+            Real-time cricket player auctions. Manage your team budget efficiently and build the perfect squad.
+          </p>
+        </div>
       </div>
     </div>
   );
 }
 
-// 🏏 DASHBOARD
-function Dashboard({ token, logout }) {
+function Dashboard({ token, onLogout }) {
   const [players, setPlayers] = useState([]);
   const [teams, setTeams] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [bid, setBid] = useState("");
+  const [filter, setFilter] = useState("");
+  const [activeTab, setActiveTab] = useState("auction");
 
-  const headers = { Authorization: `Bearer ${token}` };
+  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
-  const load = () => {
-    fetchAPI(`${BASE_URL}/players`).then(setPlayers);
-    fetchAPI(`${BASE_URL}/teams`).then(setTeams);
-    fetchAPI(`${BASE_URL}/leaderboard`).then(setLeaderboard);
+  const load = async () => {
+    try {
+      const [p, t, l] = await Promise.all([
+        fetchAPI(`${BASE_URL}/players`),
+        fetchAPI(`${BASE_URL}/teams`),
+        fetchAPI(`${BASE_URL}/leaderboard`)
+      ]);
+      setPlayers(p);
+      setTeams(t);
+      setLeaderboard(l);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  useEffect(()=>{load()},[]);
+  useEffect(() => { load(); }, []);
 
-  const bidPlayer = async () => {
-    await fetchAPI(`${BASE_URL}/bid?player_id=${selectedPlayer.id}&team_id=${selectedTeam.id}&price=${bid}`, {
-      method:"POST",
-      headers
-    });
-    load();
+  const bidAction = async () => {
+    if (!selectedPlayer || !selectedTeam || !bid) return alert("Select player, team, and bid");
+    try {
+      await fetchAPI(`${BASE_URL}/bid?player_id=${selectedPlayer.id}&team_id=${selectedTeam.id}&price=${bid}`, { method: "POST", headers: authHeaders });
+      setBid("");
+      load();
+      alert("✅ Player sold successfully!");
+    } catch (err) {
+      alert("❌ " + err.message);
+    }
+  };
+
+  const undoAction = async () => {
+    if (!selectedPlayer) return alert("Select a player");
+    try {
+      await fetchAPI(`${BASE_URL}/undo_bid?player_id=${selectedPlayer.id}`, { method: "POST", headers: authHeaders });
+      load();
+      alert("↩️ Bid undone");
+    } catch (err) {
+      alert("❌ " + err.message);
+    }
+  };
+
+  const unsoldAction = async () => {
+    if (!selectedPlayer) return alert("Select a player");
+    try {
+      await fetchAPI(`${BASE_URL}/unsold?player_id=${selectedPlayer.id}`, { method: "POST", headers: authHeaders });
+      load();
+      alert("🔄 Player unsold");
+    } catch (err) {
+      alert("❌ " + err.message);
+    }
+  };
+
+  const resetAction = async () => {
+    if (!window.confirm("⚠️ This will reset all bids. Continue?")) return;
+    try {
+      await fetchAPI(`${BASE_URL}/reset`, { method: "POST", headers: authHeaders });
+      load();
+      alert("🔁 Auction reset");
+    } catch (err) {
+      alert("❌ " + err.message);
+    }
   };
 
   return (
-    <div style={{padding:"20px", background:"#020617", minHeight:"100vh", color:"white"}}>
-
-      <div style={{display:"flex", justifyContent:"space-between"}}>
-        <h1>🏏 KPL Auction</h1>
-        <button onClick={logout}>Logout</button>
-      </div>
-
-      {/* Auction Panel */}
-      <div style={{display:"flex", gap:"10px", flexWrap:"wrap"}}>
-        <select onChange={e=>setSelectedPlayer(players.find(p=>p.id==e.target.value))}>
-          <option>Select Player</option>
-          {players.map(p=> <option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
-
-        <select onChange={e=>setSelectedTeam(teams.find(t=>t.id==e.target.value))}>
-          <option>Select Team</option>
-          {teams.map(t=> <option key={t.id} value={t.id}>{t.name}</option>)}
-        </select>
-
-        <input value={bid} onChange={e=>setBid(e.target.value)} placeholder="Bid" />
-
-        <button onClick={bidPlayer}>SOLD</button>
-      </div>
-
-      {/* Leaderboard */}
-      <div style={{display:"flex", gap:"10px", marginTop:"20px", flexWrap:"wrap"}}>
-        {leaderboard.map(l=>(
-          <div key={l.team} style={{background:"#111", padding:"10px"}}>
-            <h3>{l.team}</h3>
-            <p>{l.spent}</p>
+    <div style={{ minHeight: "100vh", background: "#0a0e27", color: "#e2e8f0", fontFamily: "'Segoe UI', Tahoma, sans-serif" }}>
+      <nav style={{ background: "rgba(15, 23, 42, 0.8)", borderBottom: "1px solid rgba(226,232,240,0.1)", backdropFilter: "blur(10px)", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 100 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ fontSize: "28px" }}>🏏</div>
+          <div>
+            <h1 style={{ margin: "0", fontSize: "20px", fontWeight: "700" }}>KPL Auction</h1>
+            <p style={{ margin: "0", fontSize: "12px", color: "#94a3b8" }}>Live Bidding Platform</p>
           </div>
-        ))}
-      </div>
+        </div>
+        <button onClick={onLogout} style={{ padding: "8px 16px", borderRadius: "6px", border: "none", background: "#ef4444", color: "white", cursor: "pointer", fontWeight: "600", fontSize: "14px" }}>Logout</button>
+      </nav>
 
+      <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "24px 16px" }}>
+        <div style={{ display: "flex", gap: "8px", marginBottom: "24px", borderBottom: "1px solid rgba(226,232,240,0.1)", paddingBottom: "16px" }}>
+          {["auction", "leaderboard", "players"].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              style={{
+                padding: "10px 16px",
+                borderRadius: "6px",
+                border: "none",
+                background: activeTab === tab ? "#0ea5e9" : "transparent",
+                color: activeTab === tab ? "white" : "#94a3b8",
+                cursor: "pointer",
+                fontWeight: "600",
+                fontSize: "14px",
+                textTransform: "capitalize"
+              }}
+            >
+              {tab === "auction" ? "⚡ Auction" : tab === "leaderboard" ? "🏆 Leaderboard" : "👥 Players"}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === "auction" && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "24px" }}>
+            <div style={{ background: "rgba(226, 232, 240, 0.05)", border: "1px solid rgba(226,232,240,0.1)", borderRadius: "12px", padding: "24px" }}>
+              <h2 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "16px" }}>Place Your Bid</h2>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "12px", marginBottom: "16px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#94a3b8", marginBottom: "6px" }}>Select Player</label>
+                  <select value={selectedPlayer?.id || ""} onChange={e => setSelectedPlayer(players.find(p => p.id == e.target.value))} style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid rgba(226,232,240,0.2)", background: "#0f172a", color: "#f8fafc", fontSize: "14px", boxSizing: "border-box" }}>
+                    <option value="">Choose a player...</option>
+                    {players.filter(p => p.status === "Unsold").map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#94a3b8", marginBottom: "6px" }}>Select Team</label>
+                  <select value={selectedTeam?.id || ""} onChange={e => setSelectedTeam(teams.find(t => t.id == e.target.value))} style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid rgba(226,232,240,0.2)", background: "#0f172a", color: "#f8fafc", fontSize: "14px", boxSizing: "border-box" }}>
+                    <option value="">Choose a team...</option>
+                    {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#94a3b8", marginBottom: "6px" }}>Bid Amount (₹)</label>
+                  <input type="number" value={bid} onChange={e => setBid(e.target.value)} placeholder="Enter bid" style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid rgba(226,232,240,0.2)", background: "#0f172a", color: "#f8fafc", fontSize: "14px", boxSizing: "border-box" }} />
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "12px" }}>
+                <button onClick={bidAction} style={{ padding: "12px", borderRadius: "6px", border: "none", background: "#10b981", color: "white", fontWeight: "600", cursor: "pointer", fontSize: "14px" }}>💰 Sold</button>
+                <button onClick={undoAction} style={{ padding: "12px", borderRadius: "6px", border: "none", background: "#f59e0b", color: "white", fontWeight: "600", cursor: "pointer", fontSize: "14px" }}>↩️ Undo</button>
+                <button onClick={unsoldAction} style={{ padding: "12px", borderRadius: "6px", border: "none", background: "#0ea5e9", color: "white", fontWeight: "600", cursor: "pointer", fontSize: "14px" }}>🔄 Unsold</button>
+                <button onClick={resetAction} style={{ padding: "12px", borderRadius: "6px", border: "none", background: "#6366f1", color: "white", fontWeight: "600", cursor: "pointer", fontSize: "14px" }}>🔁 Reset</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "leaderboard" && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
+            {leaderboard.map(item => (
+              <div key={item.team} style={{ background: "linear-gradient(135deg, rgba(15, 23, 42, 0.6), rgba(226, 232, 240, 0.05))", border: "1px solid rgba(226,232,240,0.1)", borderRadius: "12px", padding: "20px" }}>
+                <h3 style={{ fontSize: "16px", fontWeight: "700", margin: "0 0 12px" }}>{item.team}</h3>
+                <div style={{ fontSize: "13px", color: "#94a3b8", lineHeight: "1.8" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                    <span>💰 Spent:</span>
+                    <span style={{ color: "#f8fafc", fontWeight: "600" }}>₹{item.spent}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                    <span>🟢 Remaining:</span>
+                    <span style={{ color: "#10b981", fontWeight: "600" }}>₹{item.remaining}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>👥 Players:</span>
+                    <span style={{ color: "#0ea5e9", fontWeight: "600" }}>{item.players}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {activeTab === "players" && (
+          <div>
+            <div style={{ marginBottom: "16px", display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "14px", fontWeight: "600" }}>Filter:</span>
+              <select value={filter} onChange={e => setFilter(e.target.value)} style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid rgba(226,232,240,0.2)", background: "#0f172a", color: "#f8fafc", fontSize: "13px" }}>
+                <option value="">All Players</option>
+                <option value="Sold">Sold</option>
+                <option value="Unsold">Unsold</option>
+              </select>
+            </div>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                <thead>
+                  <tr style={{ background: "rgba(226, 232, 240, 0.05)", borderBottom: "1px solid rgba(226,232,240,0.1)" }}>
+                    <th style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}>Player</th>
+                    <th style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}>Category</th>
+                    <th style={{ padding: "12px", textAlign: "right", fontWeight: "600" }}>Base Price</th>
+                    <th style={{ padding: "12px", textAlign: "right", fontWeight: "600" }}>Sold Price</th>
+                    <th style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}>Team</th>
+                    <th style={{ padding: "12px", textAlign: "center", fontWeight: "600" }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {players.filter(p => !filter || p.status === filter).map(p => (
+                    <tr key={p.id} style={{ borderBottom: "1px solid rgba(226,232,240,0.05)" }}>
+                      <td style={{ padding: "12px" }}>{p.name}</td>
+                      <td style={{ padding: "12px", color: "#94a3b8" }}>{p.category}</td>
+                      <td style={{ padding: "12px", textAlign: "right" }}>₹{p.base_price}</td>
+                      <td style={{ padding: "12px", textAlign: "right", color: p.sold_price > 0 ? "#10b981" : "#94a3b8" }}>₹{p.sold_price}</td>
+                      <td style={{ padding: "12px", color: p.team === "Unsold" ? "#94a3b8" : "#0ea5e9" }}>{p.team}</td>
+                      <td style={{ padding: "12px", textAlign: "center" }}>
+                        <span style={{ display: "inline-block", padding: "4px 12px", borderRadius: "4px", fontSize: "12px", fontWeight: "600", background: p.status === "Sold" ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.2)", color: p.status === "Sold" ? "#10b981" : "#ef4444" }}>
+                          {p.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-// MAIN APP
 export default function App() {
-  const [token, setToken] = useState(localStorage.getItem("token"));
+  const storedToken = localStorage.getItem("token") || "";
+  const [token, setToken] = useState(storedToken);
+  const [page, setPage] = useState(storedToken ? "dashboard" : "auth");
 
-  return token
-    ? <Dashboard token={token} logout={()=>{localStorage.removeItem("token"); setToken(null)}} />
-    : <AuthForm setToken={setToken} />;
+  const onAuthSuccess = (newToken) => {
+    setToken(newToken);
+    setPage("dashboard");
+  };
+
+  const onLogout = () => {
+    localStorage.removeItem("token");
+    setToken("");
+    setPage("auth");
+  };
+
+  return page === "auth" ? <AuthForm onAuthSuccess={onAuthSuccess} /> : <Dashboard token={token} onLogout={onLogout} />;
 }
