@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+const BASE_URL = "https://f628-114-143-92-37.ngrok-free.app";
+
 export default function App() {
   const [players, setPlayers] = useState([]);
   const [teams, setTeams] = useState([]);
@@ -9,10 +11,18 @@ export default function App() {
   const [bid, setBid] = useState("");
   const [filter, setFilter] = useState("");
 
+  const fetchWithNgrok = (url) => {
+    return fetch(url, {
+      headers: {
+        "ngrok-skip-browser-warning": "true"
+      }
+    }).then(res => res.json());
+  };
+
   const loadData = () => {
-    fetch(" https://060e-114-143-92-37.ngrok-free.app/players").then(r=>r.json()).then(setPlayers);
-    fetch(" https://060e-114-143-92-37.ngrok-free.app/teams").then(r=>r.json()).then(setTeams);
-    fetch(" https://060e-114-143-92-37.ngrok-free.app/leaderboard").then(r=>r.json()).then(setLeaderboard);
+    fetchWithNgrok(`${BASE_URL}/players`).then(setPlayers);
+    fetchWithNgrok(`${BASE_URL}/teams`).then(setTeams);
+    fetchWithNgrok(`${BASE_URL}/leaderboard`).then(setLeaderboard);
   };
 
   useEffect(() => {
@@ -22,8 +32,11 @@ export default function App() {
   const placeBid = async () => {
     if (!selectedPlayer || !selectedTeam || !bid) return;
 
-    await fetch(` https://060e-114-143-92-37.ngrok-free.app/bid?player_id=${selectedPlayer.id}&team_id=${selectedTeam.id}&price=${bid}`, {
-      method: "POST"
+    await fetch(`${BASE_URL}/bid?player_id=${selectedPlayer.id}&team_id=${selectedTeam.id}&price=${bid}`, {
+      method: "POST",
+      headers: {
+        "ngrok-skip-browser-warning": "true"
+      }
     });
 
     setBid("");
@@ -59,12 +72,12 @@ export default function App() {
       }}>
         <select onChange={(e)=>setSelectedPlayer(players.find(p=>p.id==e.target.value))}>
           <option>Select Player</option>
-          {players.map(p => <option value={p.id}>{p.name}</option>)}
+          {players.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
 
         <select onChange={(e)=>setSelectedTeam(teams.find(t=>t.id==e.target.value))}>
           <option>Select Team</option>
-          {teams.map(t => <option value={t.id}>{t.name}</option>)}
+          {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
 
         <input placeholder="Bid ₹" value={bid} onChange={e=>setBid(e.target.value)} />
