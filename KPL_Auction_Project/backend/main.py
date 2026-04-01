@@ -1,7 +1,7 @@
 from fastapi import FastAPI, WebSocket, Depends
 import json
-from .database import SessionLocal, Base, engine
-from .models import Player, Team
+from KPL_Auction_Project.backend.database import SessionLocal, engine, Base
+from KPL_Auction_Project.backend.models import Player, Team
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
