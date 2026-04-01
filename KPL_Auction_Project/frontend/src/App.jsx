@@ -194,7 +194,7 @@ function Dashboard({ token, onLogout }) {
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ fontSize: "28px" }}>🏏</div>
           <div>
-            <h1 style={{ margin: "0", fontSize: "20px", fontWeight: "700" }}>KPL Auction</h1>
+            <h1 style={{ margin: "0", fontSize: "20px", fontWeight: "700", color: "#12db07" }}>KPL Auction</h1>
             <p style={{ margin: "0", fontSize: "12px", color: "#12db07" }}>Live Bidding Platform</p>
           </div>
         </div>
@@ -227,7 +227,7 @@ function Dashboard({ token, onLogout }) {
         {activeTab === "auction" && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "24px" }}>
             <div style={{ background: "rgba(226, 232, 240, 0.05)", border: "1px solid rgba(69, 225, 22, 0.1)", borderRadius: "12px", padding: "24px" }}>
-              <h2 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "16px" }}>Place Your Bid</h2>
+              <h2 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "16px", color: "#12db07" }}>Place Your Bid</h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "12px", marginBottom: "16px" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#94a3b8", marginBottom: "6px" }}>Select Player</label>
