@@ -23,8 +23,7 @@ def get_db():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[ "http://localhost:5173",
-        "https://ccde-114-143-92-37.ngrok-free.app"],
+    allow_origins=["*"],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
