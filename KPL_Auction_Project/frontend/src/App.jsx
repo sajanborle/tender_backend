@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-const BASE_URL = "https://7983-114-143-92-37.ngrok-free.app";
+const BASE_URL = "https://d6bb-114-143-92-37.ngrok-free.app";
 const TIMER_SECONDS = 10;
 
 const THEMES = {
