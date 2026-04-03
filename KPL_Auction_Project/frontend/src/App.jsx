@@ -60,6 +60,16 @@ function useAuctionSounds(enabled) {
     osc.stop(start + duration);
   };
   return {
+    unlock: async () => {
+      const audio = ctx();
+      if (!audio) return false;
+      try {
+        await audio.resume();
+        return true;
+      } catch {
+        return false;
+      }
+    },
     tick: () => tone(880, 0.08, "square", 0.018),
     hammer: () => { tone(180, 0.16, "triangle", 0.08); tone(120, 0.24, "sawtooth", 0.04, 0.03); },
     cheer: () => { tone(660, 0.12, "triangle", 0.05); tone(880, 0.16, "triangle", 0.05, 0.08); tone(1100, 0.22, "triangle", 0.04, 0.16); }
@@ -140,6 +150,7 @@ function Dashboard({ token, onLogout }) {
   const [timer, setTimer] = useState(TIMER_SECONDS);
   const [socketLive, setSocketLive] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
   const [soldBanner, setSoldBanner] = useState(null);
   const [bigPointsBanner, setBigPointsBanner] = useState(null);
   const announcedSoldRef = useRef("");
@@ -379,6 +390,15 @@ function Dashboard({ token, onLogout }) {
     setBid(String(currentPlayer?.base_price || ""));
     setTeamSearch("");
   };
+  const enableAudio = async () => {
+    const ok = await sounds.unlock();
+    if (ok) {
+      setAudioUnlocked(true);
+      sounds.tick();
+    } else {
+      alert("Could not enable audio on this browser yet. Click once on the page and try again.");
+    }
+  };
 
   const liveScreen = (
     <div style={{ ...panel, background: theme.hero, color: "#fff", position: "relative", overflow: "hidden" }}>
@@ -440,12 +460,20 @@ function Dashboard({ token, onLogout }) {
     return (
       <div style={{ minHeight: "100vh", background: theme.page, color: theme.text, fontFamily: "'Segoe UI', Tahoma, sans-serif", padding: 24 }}>
         <div style={{ maxWidth: 1600, margin: "0 auto", display: "grid", gap: 20 }}>
+          {!audioUnlocked && soundEnabled ? (
+            <button onClick={enableAudio} style={{ padding: "18px 22px", borderRadius: 18, border: `1px solid ${theme.border}`, background: theme.panel2, color: theme.text, fontWeight: 800, fontSize: 18, cursor: "pointer" }}>
+              Tap To Enable TV Audio
+            </button>
+          ) : null}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
             <div>
               <div style={{ fontSize: 14, letterSpacing: "0.12em", textTransform: "uppercase", color: theme.muted, marginBottom: 6 }}>KPL Live Auction TV Mode</div>
               <div style={{ fontSize: 28, fontWeight: 900 }}>{socketLive ? "Socket Live" : "Waiting For Live Socket"}</div>
             </div>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button onClick={enableAudio} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${theme.border}`, background: theme.panel2, color: theme.text, cursor: "pointer", fontWeight: 700 }}>
+                {audioUnlocked ? "Audio Ready" : "Enable Audio"}
+              </button>
               <button onClick={() => setThemeName(current => current === "dark" ? "light" : "dark")} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${theme.border}`, background: theme.panel2, color: theme.text, cursor: "pointer", fontWeight: 700 }}>{themeName === "dark" ? "Light Theme" : "Dark Theme"}</button>
               <button onClick={() => setScreenMode("admin")} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${theme.border}`, background: theme.panel2, color: theme.text, cursor: "pointer", fontWeight: 700 }}>Back To Admin</button>
             </div>
@@ -492,6 +520,7 @@ function Dashboard({ token, onLogout }) {
           <p style={{ margin: "4px 0 0", fontSize: 12, color: theme.muted }}>Realtime bidding, laptop/mobile tracking, squads, timeline</p>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <button onClick={enableAudio} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${theme.border}`, background: theme.panel2, color: theme.text, cursor: "pointer", fontWeight: 700 }}>{audioUnlocked ? "Audio Ready" : "Enable Audio"}</button>
           <button onClick={() => setThemeName(current => current === "dark" ? "light" : "dark")} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${theme.border}`, background: theme.panel2, color: theme.text, cursor: "pointer", fontWeight: 700 }}>{themeName === "dark" ? "Light Theme" : "Dark Theme"}</button>
           <button onClick={() => setScreenMode("tv")} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${theme.border}`, background: theme.panel2, color: theme.text, cursor: "pointer", fontWeight: 700 }}>TV Mode</button>
           <button onClick={() => setSoundEnabled(v => !v)} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${theme.border}`, background: theme.panel2, color: theme.text, cursor: "pointer", fontWeight: 700 }}>{soundEnabled ? "Mute Sounds" : "Enable Sounds"}</button>
