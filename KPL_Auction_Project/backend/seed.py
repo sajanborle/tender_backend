@@ -9,103 +9,143 @@ db.query(Team).delete()
 db.commit()
 
 teams = [
-    "Sagar Shigwan",
-    "Mukund Borle",
-    "Arun Dhadve",
-    "Chandrakant Borle",
-    "Chetan Javlekar",
-    "Nagesh Kasrung",
-    "Mahesh Dhadve",
-    "Prasad Borle"
+    {
+        "team_name": "Royal Worriers",
+        "owner": "Sagar Shigwan",
+        "captain": "Pravin Kobnak",
+        "db_name": "Sagar Shigwan",
+    },
+    {
+        "team_name": "Shur Shivba Worries",
+        "owner": "Mukund Borle",
+        "captain": "Vivek Kobnak",
+        "db_name": "Mukund Borle",
+    },
+    {
+        "team_name": "Mahi 11 Fighters",
+        "owner": "Arun Dhadve",
+        "captain": "Piyush Kobnak",
+        "db_name": "Arun Dhadve",
+    },
+    {
+        "team_name": "Nidhi Fighters",
+        "owner": "Chandrakant Borle",
+        "captain": "Shreyas Gije",
+        "db_name": "Chandrakant Borle",
+    },
+    {
+        "team_name": "Bhai 11 Star",
+        "owner": "Chetan Javlekar",
+        "captain": "Rohit Javlekar",
+        "db_name": "Chetan Javlekar",
+    },
+    {
+        "team_name": "Krupath 11",
+        "owner": "Nagesh Kasrung",
+        "captain": "Sanket Sawant",
+        "db_name": "Nagesh Kasrung",
+    },
+    {
+        "team_name": "Harsh 11",
+        "owner": "Mahesh Dhadve",
+        "captain": "Yash Pawar",
+        "db_name": "Mahesh Dhadve",
+    },
+    {
+        "team_name": "Jeet 11",
+        "owner": "Prasad Borle",
+        "captain": "Avesh Pawar",
+        "db_name": "Prasad Borle",
+    },
 ]
 
 players = [
 
 # ⭐ STAR PLAYERS
-("Nitin Borle","Star",500),
-("Rohan Kasrung","Star",500),
-("Suraj Kasrung","Star",500),
-("Prashant Kasrung","Star",500),
-("Sajan Borle","Star",500),
-("Vinit Pawar","Star",500),
-("Pratesh Kobnak","Star",500),
-("Vaibhav Karandekar","Star",500),
+("Nitin Borle","Star",100),
+("Sajan Borle","Star",100),
+("Rohan Kasrung","Star",100),
+("Suraj Kasrung","Star",100),
+("Amit Shigwan","A1",100),
+("Vinit Pawar","Star",100),
+("Pratesh Kobnak","Star",100),
+("Vaibhav Karandekar","Star",100),
 
 # A1
-("Amit Shigwan","A1",400),
-("Rupesh Borle","A1",400),
-("Tejas Pawar","A1",400),
-("Hitesh Kobnak","A1",400),
-("Parag Kasrung","A1",400),
-("Milind Pawar","A1",400),
-("Ashish Pawar","A1",400),
-("Abhinath Kobnak","A1",400),
+("Prashant Kasrung","Star",100),
+("Rupesh Borle","A1",100),
+("Tejas Pawar","A1",100),
+("Hitesh Kobnak","A1",100),
+("Parag Kasrung","A1",100),
+("Milind Pawar","A1",100),
+("Ashish Pawar","A1",100),
+("Abhinath Kobnak","A1",100),
 
 # A2
-("Ajay Gije","A2",400),
-("Sunny Bhuvad","A2",400),
-("Vijay Borle","A2",400),
-("Abhi Borle","A2",400),
-("Tejas Kasrung","A2",400),
-("Sahil Bhuvad","A2",400),
-("Akshay Kobnak","A2",400),
-("Rakesh Kobnak","A2",400),
+("Ajay Gije","A2",100),
+("Sunny Bhuvad","A2",100),
+("Vijay Borle","A2",100),
+("Abhi Borle","A2",100),
+("Tejas Kasrung","A2",100),
+("Sahil Bhuvad","A2",100),
+("Akshay Kobnak","A2",100),
+("Rakesh Kobnak","A2",100),
 
 # A3
-("Harshad Kobnak","A3",400),
-("Hemant Kobnak","A3",400),
-("Mayur Kobnak","A3",400),
-("Sanket Kasrung","A3",400),
-("Dilesh Borle","A3",400),
-("Kunal Kobnak","A3",400),
-("Keyush Shigwan","A3",400),
-("Kailas Kobnak","A3",400),
+("Harshad Kobnak","A3",100),
+("Hemant Kobnak","A3",100),
+("Mayur Kobnak","A3",100),
+("Sanket Kasrung","A3",100),
+("Dilesh Borle","A3",100),
+("Kunal Kobnak","A3",100),
+("Keyush Shigwan","A3",100),
+("Kailas Kobnak","A3",100),
 
 # B1
-("Hemant Borle","B1",300),
-("Omkar Rahatwal","B1",300),
-("Rutesh Dhadve","B1",300),
-("Narendra Gije","B1",300),
-("Naitik Pawar","B1",300),
-("Hiren Pawar","B1",300),
-("Vinay Sawant","B1",300),
-("Shubham Pawar","B1",300),
+("Hemant Borle","B1",100),
+("Omkar Rahatwal","B1",100),
+("Rutesh Dhadve","B1",100),
+("Narendra Gije","B1",100),
+("Naitik Pawar","B1",100),
+("Hiren Pawar","B1",100),
+("Vinay Sawant","B1",100),
+("Shubham Pawar","B1",100),
 
 # B2
-("Adarsh Kasrung","B2",300),
-("Maheshwar Kobnak","B2",300),
-("Vrushabh Shigwan","B2",300),
-("Jignesh Kasrung","B2",300),
-("Vivek Shigwan","B2",300),
-("Niket Sawant","B2",300),
-("Piyush Sawant","B2",300),
-("Nitesh Borle","B2",300),
+("Adarsh Kasrung","B2",100),
+("Maheshwar Kobnak","B2",100),
+("Vrushabh Shigwan","B2",100),
+("Jignesh Kasrung","B2",100),
+("Vivek Shigwan","B2",100),
+("Niket Sawant","B2",100),
+("Piyush Sawant","B2",100),
+("Nitesh Borle","B2",100),
 
 # B3
-("Pranay Gije","B3",300),
-("Nil Gije","B3",300),
-("Akash Pawar","B3",300),
-("Ashwin Gije","B3",300),
-("Jignesh Shigwan","B3",300),
-("Amol Pawar","B3",400),
-("Shrikant Kasrung","B3",400),
+("Pranay Gije","B3",100),
+("Nil Gije","B3",100),
+("Akash Pawar","B3",100),
+("Ashwin Gije","B3",100),
+("Jignesh Shigwan","B3",100),
+("Amol Pawar","B3",100),
+("Shrikant Kasrung","B3",100),
 
 # C1
-("Prathamesh Dhadve","C1",200),
-("Tanoj Kobnak","C1",200),
-("Bhavesh Kasrung","C1",200),
-("Ketan Kobnak","C1",200),
-("Suchit Shigwan","C1",200),
-("Pranav Kobnak","C1",200),
-("Rohit Kasrung","C1",200),
+("Prathamesh Dhadve","C1",100),
+("Tanoj Kobnak","C1",100),
+("Bhavesh Kasrung","C1",100),
+("Ketan Kobnak","C1",100),
+("Suchit Shigwan","C1",100),
+("Pranav Kobnak","C1",100),
+("Rohit Kasrung","C1",100),
 
 # C2
-("Vivek Gije","C2",200),
-("Vedant Kasrung","C2",200),
-("Nikhil Kasrung","C2",200),
-("Kaushtubh Sawant","C2",200),
-("Raju Javlekar","C2",200),
-("Dip Karandekar","C2",200),
+("Vivek Gije","C2",100),
+("Vedant Kasrung","C2",100),
+("Nikhil Kasrung","C2",100),
+("Kaushtubh Sawant","C2",100),
+("Raju Javlekar","C2",100),
+("Dip Karandekar","C2",100),
 
 # D CATEGORY
 ("Gaurav Javlekar","D",100),
@@ -124,7 +164,6 @@ players = [
 ("Vishal Kobnak","D",100),
 ("Vijay Gije","D",100),
 ("Jagdish Gije","D",100),
-("Ronak Pawar","D",100),
 ("Prem Borle","D",100),
 ("Surya Sawant","D",100),
 ("Manish Panvalkar","D",100),
@@ -174,8 +213,8 @@ for name, cat, price in players:
     db.add(Player(name=name, category=cat, base_price=price))
 
 
-for name in teams:
-    db.add(Team(name=name))
+for team in teams:
+    db.add(Team(name=team["db_name"]))
 
 db.commit()
 

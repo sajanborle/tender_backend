@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-const BASE_URL = "https://c632-114-143-92-37.ngrok-free.app";
+const BASE_URL = "https://7983-114-143-92-37.ngrok-free.app";
 const TIMER_SECONDS = 10;
 
 const THEMES = {
@@ -19,6 +19,7 @@ const fetchAPI = async (url, options = {}) => {
 };
 
 const formatCurrency = value => `₹${Number(value || 0).toLocaleString("en-IN")}`;
+const formatPoints = value => `${Number(value || 0).toLocaleString("en-IN")} pts`;
 
 const getWsUrl = () => {
   const url = new URL(BASE_URL);
@@ -145,8 +146,9 @@ function Dashboard({ token, onLogout }) {
   const selectedTeam = teams.find(team => team.id === Number(teamId)) || auctionState?.current_team || null;
   const getTeamLabel = teamName => {
     if (!teamName) return "";
-    const team = teams.find(item => item.name === teamName);
-    return team?.captain ? `${teamName} (Captain: ${team.captain})` : teamName;
+    const team = teams.find(item => item.key === teamName || item.name === teamName || item.owner === teamName);
+    if (!team) return teamName;
+    return `${team.name} (Owner: ${team.owner}${team.captain ? `, Captain: ${team.captain}` : ""})`;
   };
   const currentBid = Number(auctionState?.current_bid || currentPlayer?.base_price || 0);
   const workingBid = Number(bid || currentBid || 0);
@@ -154,10 +156,10 @@ function Dashboard({ token, onLogout }) {
   const insufficientBudget = selectedTeam ? workingBid > remainingBudget : false;
   const categories = [...new Set(players.filter(player => player.status === "Unsold").map(player => player.category).filter(Boolean))];
   const filteredPlayers = players.filter(player => player.status === "Unsold" && player.name.toLowerCase().includes(playerSearch.toLowerCase()) && (!categoryFilter || player.category === categoryFilter));
-  const filteredTeams = teams.filter(team => team.name.toLowerCase().includes(teamSearch.toLowerCase()));
+  const filteredTeams = teams.filter(team => `${team.name} ${team.owner} ${team.captain || ""}`.toLowerCase().includes(teamSearch.toLowerCase()));
   const playerCards = players.filter(player => (!filter || player.status === filter) && player.name.toLowerCase().includes(tabSearch.toLowerCase()));
   const squads = teams.map(team => {
-    const members = players.filter(player => player.status === "Sold" && player.team === team.name);
+    const members = players.filter(player => player.status === "Sold" && player.team === team.key);
     return { ...team, members, categories: countByCategory(members), remaining: team.budget - team.spent, totalMembers: members.length + (team.captain ? 1 : 0) };
   });
   const canSell = Boolean(currentPlayer && selectedTeam && workingBid >= (currentPlayer?.base_price || 0) && !insufficientBudget);
@@ -168,7 +170,7 @@ function Dashboard({ token, onLogout }) {
       : insufficientBudget
         ? "Selected team does not have enough budget for this bid."
         : workingBid < (currentPlayer?.base_price || 0)
-          ? `Bid must be at least ${formatCurrency(currentPlayer?.base_price)}.`
+          ? `Bid must be at least ${formatPoints(currentPlayer?.base_price)}.`
           : "Ready to sell this player.";
   const inputStyle = { width: "100%", padding: "11px 12px", borderRadius: 10, border: `1px solid ${theme.border}`, background: theme.panel2, color: theme.text, fontSize: 14, boxSizing: "border-box" };
   const panel = { background: theme.panel, border: `1px solid ${theme.border}`, borderRadius: 20, padding: 22, boxShadow: themeName === "dark" ? "0 20px 48px rgba(0,194,255,0.14)" : "0 16px 40px rgba(15,111,255,0.10)" };
@@ -360,18 +362,18 @@ function Dashboard({ token, onLogout }) {
         <div style={{ fontSize: 46, lineHeight: 1.05, fontWeight: 900, marginBottom: 12 }}>{currentPlayer?.name || "Auction Complete"}</div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 18 }}>
           <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,0.14)", fontWeight: 700 }}>Category: {currentPlayer?.category || "-"}</div>
-          <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,0.14)", fontWeight: 700 }}>Base: {formatCurrency(currentPlayer?.base_price)}</div>
+          <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,0.14)", fontWeight: 700 }}>Base Points: {formatPoints(currentPlayer?.base_price)}</div>
           <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,0.14)", fontWeight: 700 }}>Team: {auctionState?.current_team?.name || selectedTeam?.name || "Waiting"}</div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18, alignItems: "end" }}>
           <div style={{ padding: 24, borderRadius: 22, background: "rgba(3,10,22,0.34)", border: "1px solid rgba(255,255,255,0.12)" }}>
-            <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.12em", opacity: 0.76, marginBottom: 8 }}>Current Bid</div>
-            <div style={{ fontSize: 54, lineHeight: 1, fontWeight: 900 }}>{formatCurrency(currentBid)}</div>
+            <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.12em", opacity: 0.76, marginBottom: 8 }}>Current Points</div>
+            <div style={{ fontSize: 54, lineHeight: 1, fontWeight: 900 }}>{formatPoints(currentBid)}</div>
           </div>
           <div style={{ padding: 18, borderRadius: 20, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.14)" }}>
             <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.12em", opacity: 0.76, marginBottom: 8 }}>Latest Event</div>
             <div style={{ fontWeight: 800, fontSize: 18, textTransform: "capitalize" }}>{history[0]?.type?.replaceAll("_", " ") || "Waiting"}</div>
-            <div style={{ marginTop: 8, color: "rgba(255,255,255,0.84)", lineHeight: 1.6 }}>{history[0]?.player ? [history[0].player, history[0].team ? getTeamLabel(history[0].team) : "", history[0].price ? formatCurrency(history[0].price) : ""].filter(Boolean).join(" · ") : "Select a player to start."}</div>
+            <div style={{ marginTop: 8, color: "rgba(255,255,255,0.84)", lineHeight: 1.6 }}>{history[0]?.player ? [history[0].player, history[0].team ? getTeamLabel(history[0].team) : "", history[0].points ? formatPoints(history[0].points) : ""].filter(Boolean).join(" · ") : "Select a player to start."}</div>
           </div>
         </div>
       </div>
@@ -401,6 +403,7 @@ function Dashboard({ token, onLogout }) {
           <div style={panel}>
             <div style={{ fontSize: 12, color: theme.muted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Current Team</div>
             <div style={{ fontSize: 20, fontWeight: 800 }}>{selectedTeam?.name || "Not Selected"}</div>
+            <div style={{ marginTop: 6, fontSize: 13, color: theme.muted }}>Owner: <strong style={{ color: theme.text }}>{selectedTeam?.owner || "Not Selected"}</strong></div>
             <div style={{ marginTop: 6, fontSize: 13, color: theme.muted }}>Captain: <strong style={{ color: theme.text }}>{selectedTeam?.captain || "Not Selected"}</strong></div>
           </div>
           <div style={panel}>
@@ -418,6 +421,9 @@ function Dashboard({ token, onLogout }) {
             {teams.map(team => (
               <div key={team.id} style={{ padding: 14, borderRadius: 14, background: theme.panel2, border: `1px solid ${theme.border}` }}>
                 <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 6 }}>{team.name}</div>
+                <div style={{ color: theme.muted, fontSize: 14, marginBottom: 4 }}>
+                  Owner: <strong style={{ color: theme.text }}>{team.owner || "Not assigned"}</strong>
+                </div>
                 <div style={{ color: theme.muted, fontSize: 14 }}>
                   Captain: <strong style={{ color: theme.text }}>{team.captain || "Not assigned"}</strong>
                 </div>
@@ -457,8 +463,8 @@ function Dashboard({ token, onLogout }) {
                   <div style={{ fontWeight: 800 }}>{selectedTeam?.name || "Not selected"}</div>
                 </div>
                 <div style={{ padding: 12, borderRadius: 12, background: theme.panel2 }}>
-                  <div style={{ fontSize: 12, color: theme.muted, marginBottom: 4 }}>Working Bid</div>
-                  <div style={{ fontWeight: 800 }}>{formatCurrency(workingBid)}</div>
+                  <div style={{ fontSize: 12, color: theme.muted, marginBottom: 4 }}>Working Points</div>
+                  <div style={{ fontWeight: 800 }}>{formatPoints(workingBid)}</div>
                 </div>
               </div>
             </div>
@@ -486,12 +492,12 @@ function Dashboard({ token, onLogout }) {
                 <div>
                   <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: theme.muted, marginBottom: 6 }}>Select Team</label>
                   <input value={teamSearch} onChange={e => { setTeamSearch(e.target.value); setTeamIndex(0); }} onKeyDown={teamKeys} placeholder="Search team..." style={{ ...inputStyle, marginBottom: 8 }} />
-                  <select value={teamId} onChange={e => setTeamId(e.target.value)} style={inputStyle}><option value="">Choose a team...</option>{filteredTeams.map(team => <option key={team.id} value={team.id}>{team.name} - Captain: {team.captain || "N/A"}</option>)}</select>
+                  <select value={teamId} onChange={e => setTeamId(e.target.value)} style={inputStyle}><option value="">Choose a team...</option>{filteredTeams.map(team => <option key={team.id} value={team.id}>{team.name} - Owner: {team.owner} - Captain: {team.captain || "N/A"}</option>)}</select>
                   <div style={{ marginTop: 6, fontSize: 12, color: theme.muted }}>Arrow keys + Enter supported. {filteredTeams.length} teams found.</div>
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: theme.muted, marginBottom: 6 }}>Bid Amount</label>
-                  <input type="number" value={bid} onChange={e => setBid(e.target.value)} placeholder="Enter live bid" style={inputStyle} />
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: theme.muted, marginBottom: 6 }}>Points</label>
+                  <input type="number" value={bid} onChange={e => setBid(e.target.value)} placeholder="Enter live points" style={inputStyle} />
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginTop: 10 }}>{[100, 200, 500, 1000].map(value => <button key={value} onClick={() => increment(value)} style={{ padding: "10px 0", borderRadius: 10, border: "none", background: theme.accent, color: "white", fontWeight: 800, cursor: "pointer" }}>+{value}</button>)}</div>
                   <button onClick={() => previewBid(workingBid)} disabled={!currentPlayer || !selectedTeam} style={{ marginTop: 10, width: "100%", padding: 11, borderRadius: 10, border: `1px solid ${theme.border}`, background: !currentPlayer || !selectedTeam ? "#64748b" : theme.panel2, color: !currentPlayer || !selectedTeam ? "#e2e8f0" : theme.text, fontWeight: 700, cursor: !currentPlayer || !selectedTeam ? "not-allowed" : "pointer" }}>Set Live Bid</button>
                 </div>
@@ -500,7 +506,7 @@ function Dashboard({ token, onLogout }) {
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 16, padding: 14, borderRadius: 14, background: insufficientBudget ? "rgba(239,68,68,0.14)" : "rgba(34,197,94,0.10)", border: `1px solid ${insufficientBudget ? "rgba(239,68,68,0.32)" : "rgba(34,197,94,0.24)"}` }}>
                 <div>
                   <div style={{ fontSize: 12, color: theme.muted, textTransform: "uppercase", letterSpacing: "0.1em" }}>Budget Watch</div>
-                  <div style={{ fontSize: 18, fontWeight: 800, color: insufficientBudget ? theme.danger : theme.success }}>{selectedTeam ? `${selectedTeam.name}: ${formatCurrency(remainingBudget)} left` : "Select a team to view budget"}</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: insufficientBudget ? theme.danger : theme.success }}>{selectedTeam ? `${selectedTeam.name}: ${formatPoints(remainingBudget)} left` : "Select a team to view budget"}</div>
                 </div>
                 <div style={{ fontWeight: 700, color: insufficientBudget ? theme.danger : theme.muted }}>{insufficientBudget ? "Insufficient Budget" : "Budget healthy"}</div>
               </div>
@@ -529,22 +535,22 @@ function Dashboard({ token, onLogout }) {
             <div style={panel}>
               <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>Auction Timeline</h2>
               <div style={{ display: "grid", gap: 12, maxHeight: 430, overflowY: "auto" }}>
-                {history.length ? history.map(item => <div key={item.id} style={{ padding: 14, borderRadius: 14, background: theme.panel2, border: `1px solid ${theme.border}` }}><div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 6, flexWrap: "wrap" }}><strong style={{ textTransform: "capitalize" }}>{item.type.replaceAll("_", " ")}</strong><span style={{ color: theme.muted, fontSize: 12 }}>{new Date(item.timestamp).toLocaleTimeString()}</span></div><div style={{ color: theme.muted, lineHeight: 1.6 }}>{[item.player, item.team ? getTeamLabel(item.team) : "", item.price ? formatCurrency(item.price) : "", item.old_price ? `Old ${formatCurrency(item.old_price)}` : ""].filter(Boolean).join(" · ") || "Auction event"}</div></div>) : <div style={{ color: theme.muted }}>No auction history yet.</div>}
+                {history.length ? history.map(item => <div key={item.id} style={{ padding: 14, borderRadius: 14, background: theme.panel2, border: `1px solid ${theme.border}` }}><div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 6, flexWrap: "wrap" }}><strong style={{ textTransform: "capitalize" }}>{item.type.replaceAll("_", " ")}</strong><span style={{ color: theme.muted, fontSize: 12 }}>{new Date(item.timestamp).toLocaleTimeString()}</span></div><div style={{ color: theme.muted, lineHeight: 1.6 }}>{[item.player, item.team ? getTeamLabel(item.team) : "", item.points ? formatPoints(item.points) : "", item.old_points ? `Old ${formatPoints(item.old_points)}` : ""].filter(Boolean).join(" · ") || "Auction event"}</div></div>) : <div style={{ color: theme.muted }}>No auction history yet.</div>}
               </div>
             </div>
             <div style={panel}>
               <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>Leaderboard</h2>
               <div style={{ display: "grid", gap: 12 }}>
-                {leaderboard.map(item => <div key={item.team} style={{ background: theme.panel2, border: `1px solid ${theme.border}`, borderRadius: 16, padding: 16 }}><div style={{ fontSize: 16, fontWeight: 800, marginBottom: 6 }}>{item.team}</div><div style={{ fontSize: 13, color: theme.muted, marginBottom: 10 }}>Captain: <strong style={{ color: theme.text }}>{item.captain || "Not set"}</strong></div><div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, fontSize: 13, color: theme.muted }}><div>Spent: <strong style={{ color: theme.text }}>{formatCurrency(item.spent)}</strong></div><div>Left: <strong style={{ color: theme.success }}>{formatCurrency(item.remaining)}</strong></div><div>Squad: <strong style={{ color: theme.accent }}>{item.players}</strong></div></div><div style={{ marginTop: 8, fontSize: 12, color: theme.muted }}>Auction players: {item.auction_players}</div></div>)}
+                {leaderboard.map(item => <div key={item.team} style={{ background: theme.panel2, border: `1px solid ${theme.border}`, borderRadius: 16, padding: 16 }}><div style={{ fontSize: 16, fontWeight: 800, marginBottom: 6 }}>{item.team}</div><div style={{ fontSize: 13, color: theme.muted, marginBottom: 4 }}>Owner: <strong style={{ color: theme.text }}>{item.owner || "Not set"}</strong></div><div style={{ fontSize: 13, color: theme.muted, marginBottom: 10 }}>Captain: <strong style={{ color: theme.text }}>{item.captain || "Not set"}</strong></div><div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, fontSize: 13, color: theme.muted }}><div>Spent: <strong style={{ color: theme.text }}>{formatPoints(item.spent)}</strong></div><div>Left: <strong style={{ color: theme.success }}>{formatPoints(item.remaining)}</strong></div><div>Squad: <strong style={{ color: theme.accent }}>{item.players}</strong></div></div><div style={{ marginTop: 8, fontSize: 12, color: theme.muted }}>Auction players: {item.auction_players}</div></div>)}
               </div>
             </div>
           </div>
         </div>}
         {tab === "leaderboard" && <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
-          {squads.map(team => <div key={team.id} style={panel}><div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 14 }}><div><h3 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>{team.name}</h3><div style={{ color: theme.muted, marginTop: 4 }}>Captain: <strong style={{ color: theme.text }}>{team.captain || "Not set"}</strong></div><div style={{ color: theme.muted, marginTop: 4 }}>{team.totalMembers} total squad · {team.members.length} auction players · {formatCurrency(team.remaining)} left</div></div><div style={{ padding: "10px 12px", borderRadius: 12, background: theme.panel2, fontWeight: 800, color: theme.accent }}>{formatCurrency(team.spent)}</div></div><div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>{Object.entries(team.categories).length ? Object.entries(team.categories).map(([category, count]) => <span key={category} style={{ padding: "6px 10px", borderRadius: 999, background: theme.panel2, border: `1px solid ${theme.border}`, fontSize: 12, fontWeight: 700 }}>{category}: {count}</span>) : <span style={{ color: theme.muted }}>No auction players bought yet.</span>}</div><div style={{ display: "grid", gap: 8, maxHeight: 260, overflowY: "auto" }}>{team.captain ? <div style={{ padding: "12px 14px", borderRadius: 14, background: "rgba(18,189,248,0.1)", border: `1px solid ${theme.border}`, display: "flex", justifyContent: "space-between", gap: 10 }}><span>{team.captain}</span><span style={{ color: theme.accent }}>Captain</span></div> : null}{team.members.map(player => <div key={player.id} style={{ padding: "12px 14px", borderRadius: 14, background: theme.panel2, border: `1px solid ${theme.border}`, display: "flex", justifyContent: "space-between", gap: 10 }}><span>{player.name}</span><span style={{ color: theme.muted }}>{player.category} · {formatCurrency(player.sold_price)}</span></div>)}</div></div>)}
+          {squads.map(team => <div key={team.id} style={panel}><div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 14 }}><div><h3 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>{team.name}</h3><div style={{ color: theme.muted, marginTop: 4 }}>Owner: <strong style={{ color: theme.text }}>{team.owner || "Not set"}</strong></div><div style={{ color: theme.muted, marginTop: 4 }}>Captain: <strong style={{ color: theme.text }}>{team.captain || "Not set"}</strong></div><div style={{ color: theme.muted, marginTop: 4 }}>{team.totalMembers} total squad · {team.members.length} auction players · {formatPoints(team.remaining)} left</div></div><div style={{ padding: "10px 12px", borderRadius: 12, background: theme.panel2, fontWeight: 800, color: theme.accent }}>{formatPoints(team.spent)}</div></div><div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>{Object.entries(team.categories).length ? Object.entries(team.categories).map(([category, count]) => <span key={category} style={{ padding: "6px 10px", borderRadius: 999, background: theme.panel2, border: `1px solid ${theme.border}`, fontSize: 12, fontWeight: 700 }}>{category}: {count}</span>) : <span style={{ color: theme.muted }}>No auction players bought yet.</span>}</div><div style={{ display: "grid", gap: 8, maxHeight: 260, overflowY: "auto" }}>{team.captain ? <div style={{ padding: "12px 14px", borderRadius: 14, background: "rgba(18,189,248,0.1)", border: `1px solid ${theme.border}`, display: "flex", justifyContent: "space-between", gap: 10 }}><span>{team.captain}</span><span style={{ color: theme.accent }}>Captain</span></div> : null}{team.members.map(player => <div key={player.id} style={{ padding: "12px 14px", borderRadius: 14, background: theme.panel2, border: `1px solid ${theme.border}`, display: "flex", justifyContent: "space-between", gap: 10 }}><span>{player.name}</span><span style={{ color: theme.muted }}>{player.category} · {formatPoints(player.sold_price)}</span></div>)}</div></div>)}
         </div>}
-        {tab === "players" && <div><div style={{ marginBottom: 18, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}><input value={tabSearch} onChange={e => setTabSearch(e.target.value)} placeholder="Search all players..." style={{ ...inputStyle, maxWidth: 260 }} /><select value={filter} onChange={e => setFilter(e.target.value)} style={{ ...inputStyle, maxWidth: 180 }}><option value="">All Players</option><option value="Sold">Sold</option><option value="Unsold">Unsold</option></select></div><div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>{playerCards.map(player => <div key={player.id} style={{ ...panel, background: player.id === currentPlayer?.id ? `linear-gradient(135deg, ${theme.panel}, ${theme.panel2})` : theme.panel, boxShadow: player.id === currentPlayer?.id ? `0 0 0 2px ${theme.accent}` : panel.boxShadow }}><div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 14 }}><div><div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>{player.name}</div><div style={{ color: theme.muted }}>{player.category}</div></div><span style={{ display: "inline-block", padding: "6px 10px", borderRadius: 999, fontSize: 12, fontWeight: 800, background: player.status === "Sold" ? "rgba(34,197,94,0.16)" : "rgba(239,68,68,0.16)", color: player.status === "Sold" ? theme.success : theme.danger }}>{player.status}</span></div><div style={{ display: "grid", gap: 8, color: theme.muted }}><div>Base Price: <strong style={{ color: theme.text }}>{formatCurrency(player.base_price)}</strong></div><div>Sold Price: <strong style={{ color: player.sold_price ? theme.success : theme.text }}>{formatCurrency(player.sold_price)}</strong></div><div>Team: <strong style={{ color: theme.text }}>{player.team}</strong></div></div></div>)}</div></div>}
-        {tab === "history" && <div style={{ display: "grid", gap: 14 }}>{history.map(item => <div key={item.id} style={panel}><div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 8 }}><strong style={{ textTransform: "capitalize" }}>{item.type.replaceAll("_", " ")}</strong><span style={{ color: theme.muted }}>{new Date(item.timestamp).toLocaleString()}</span></div><div style={{ color: theme.muted, lineHeight: 1.7 }}>{[item.player, item.team ? getTeamLabel(item.team) : "", item.price ? formatCurrency(item.price) : "", item.old_price ? `Old ${formatCurrency(item.old_price)}` : ""].filter(Boolean).join(" · ")}</div></div>)}</div>}
+        {tab === "players" && <div><div style={{ marginBottom: 18, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}><input value={tabSearch} onChange={e => setTabSearch(e.target.value)} placeholder="Search all players..." style={{ ...inputStyle, maxWidth: 260 }} /><select value={filter} onChange={e => setFilter(e.target.value)} style={{ ...inputStyle, maxWidth: 180 }}><option value="">All Players</option><option value="Sold">Sold</option><option value="Unsold">Unsold</option></select></div><div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>{playerCards.map(player => <div key={player.id} style={{ ...panel, background: player.id === currentPlayer?.id ? `linear-gradient(135deg, ${theme.panel}, ${theme.panel2})` : theme.panel, boxShadow: player.id === currentPlayer?.id ? `0 0 0 2px ${theme.accent}` : panel.boxShadow }}><div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 14 }}><div><div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>{player.name}</div><div style={{ color: theme.muted }}>{player.category}</div></div><span style={{ display: "inline-block", padding: "6px 10px", borderRadius: 999, fontSize: 12, fontWeight: 800, background: player.status === "Sold" ? "rgba(34,197,94,0.16)" : "rgba(239,68,68,0.16)", color: player.status === "Sold" ? theme.success : theme.danger }}>{player.status}</span></div><div style={{ display: "grid", gap: 8, color: theme.muted }}><div>Base Points: <strong style={{ color: theme.text }}>{formatPoints(player.base_price)}</strong></div><div>Sold Points: <strong style={{ color: player.sold_price ? theme.success : theme.text }}>{formatPoints(player.sold_price)}</strong></div><div>Team: <strong style={{ color: theme.text }}>{getTeamLabel(player.team)}</strong></div></div></div>)}</div></div>}
+        {tab === "history" && <div style={{ display: "grid", gap: 14 }}>{history.map(item => <div key={item.id} style={panel}><div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 8 }}><strong style={{ textTransform: "capitalize" }}>{item.type.replaceAll("_", " ")}</strong><span style={{ color: theme.muted }}>{new Date(item.timestamp).toLocaleString()}</span></div><div style={{ color: theme.muted, lineHeight: 1.7 }}>{[item.player, item.team ? getTeamLabel(item.team) : "", item.points ? formatPoints(item.points) : "", item.old_points ? `Old ${formatPoints(item.old_points)}` : ""].filter(Boolean).join(" · ")}</div></div>)}</div>}
       </div>
     </div>
   );

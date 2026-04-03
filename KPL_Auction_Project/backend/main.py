@@ -25,15 +25,15 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 DEFAULT_TIMER_SECONDS = 10
 MAX_HISTORY_ITEMS = 50
-TEAM_CAPTAINS = {
-    "Sagar Shigwan": "Pravin Kobnak",
-    "Mukund Borle": "Vivek Kobnak",
-    "Arun Dhadve": "Piyush Kobnak",
-    "Chandrakant Borle": "Shreyas Gije",
-    "Chetan Javlekar": "Rohit Javlekar",
-    "Nagesh Kasrung": "Sanket Sawant",
-    "Mahesh Dhadve": "Yash Pawar",
-    "Prasad Borle": "Avesh Pawar",
+TEAM_META = {
+    "Sagar Shigwan": {"display_name": "Royal Worriers", "owner": "Sagar Shigwan", "captain": "Pravin Kobnak"},
+    "Mukund Borle": {"display_name": "Shur Shivba Worries", "owner": "Mukund Borle", "captain": "Vivek Kobnak"},
+    "Arun Dhadve": {"display_name": "Mahi 11 Fighters", "owner": "Arun Dhadve", "captain": "Piyush Kobnak"},
+    "Chandrakant Borle": {"display_name": "Nidhi Fighters", "owner": "Chandrakant Borle", "captain": "Shreyas Gije"},
+    "Chetan Javlekar": {"display_name": "Bhai 11 Star", "owner": "Chetan Javlekar", "captain": "Rohit Javlekar"},
+    "Nagesh Kasrung": {"display_name": "Krupath 11", "owner": "Nagesh Kasrung", "captain": "Sanket Sawant"},
+    "Mahesh Dhadve": {"display_name": "Harsh 11", "owner": "Mahesh Dhadve", "captain": "Yash Pawar"},
+    "Prasad Borle": {"display_name": "Jeet 11", "owner": "Prasad Borle", "captain": "Avesh Pawar"},
 }
 
 auction_state = {
@@ -171,10 +171,15 @@ def serialize_player(player):
 def serialize_team(team):
     if not team:
         return None
-    captain = TEAM_CAPTAINS.get(team.name, "")
+    meta = TEAM_META.get(team.name, {})
+    captain = meta.get("captain", "")
+    display_name = meta.get("display_name", team.name)
+    owner = meta.get("owner", team.name)
     return {
         "id": team.id,
-        "name": team.name,
+        "key": team.name,
+        "name": display_name,
+        "owner": owner,
         "captain": captain,
         "budget": team.budget,
         "spent": team.spent,
@@ -239,10 +244,11 @@ def push_update(db, event):
 
 def validate_team_budget(team, price):
     remaining = team.budget - team.spent
+    team_label = TEAM_META.get(team.name, {}).get("display_name", team.name)
     if price > remaining:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Insufficient budget. {team.name} has only {remaining} remaining.",
+            detail=f"Insufficient budget. {team_label} has only {remaining} remaining.",
         )
 
 
@@ -304,11 +310,12 @@ def leaderboard(db=Depends(get_db)):
     teams = db.query(Team).order_by(Team.spent.desc(), Team.name.asc()).all()
     return [
         {
-            "team": team.name,
-            "captain": TEAM_CAPTAINS.get(team.name, ""),
+            "team": TEAM_META.get(team.name, {}).get("display_name", team.name),
+            "owner": TEAM_META.get(team.name, {}).get("owner", team.name),
+            "captain": TEAM_META.get(team.name, {}).get("captain", ""),
             "spent": team.spent,
             "remaining": team.budget - team.spent,
-            "players": team.players_count + (1 if TEAM_CAPTAINS.get(team.name) else 0),
+            "players": team.players_count + (1 if TEAM_META.get(team.name, {}).get("captain") else 0),
             "auction_players": team.players_count,
         }
         for team in teams
@@ -362,7 +369,7 @@ def preview_bid(team_id: int, price: int, current_user=Depends(get_current_user)
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
     if price < player.base_price:
-        raise HTTPException(status_code=400, detail=f"Bid must be at least base price {player.base_price}")
+        raise HTTPException(status_code=400, detail=f"Bid must be at least base points {player.base_price}")
 
     validate_team_budget(team, price)
 
@@ -370,7 +377,7 @@ def preview_bid(team_id: int, price: int, current_user=Depends(get_current_user)
     auction_state["current_team_id"] = team.id
     auction_state["current_bid"] = price
     auction_state["last_bid_at"] = utc_now_iso()
-    add_history_entry("bid_preview", {"player": player.name, "team": team.name, "price": price})
+    add_history_entry("bid_preview", {"player": player.name, "team": team.name, "points": price})
     push_update(db, "bid_preview")
     return build_snapshot(db)
 
@@ -385,7 +392,7 @@ def place_bid(player_id: int, team_id: int, price: int, current_user=Depends(get
     if player.status != "Unsold":
         raise HTTPException(status_code=400, detail="Player already sold")
     if price < player.base_price:
-        raise HTTPException(status_code=400, detail=f"Bid must be at least base price {player.base_price}")
+        raise HTTPException(status_code=400, detail=f"Bid must be at least base points {player.base_price}")
 
     validate_team_budget(team, price)
 
@@ -398,7 +405,7 @@ def place_bid(player_id: int, team_id: int, price: int, current_user=Depends(get
 
     add_history_entry(
         "sold",
-        {"player": player.name, "team": team.name, "price": price, "category": player.category},
+        {"player": player.name, "team": team.name, "points": price, "category": player.category},
     )
 
     next_player = get_next_unsold_player(db)
@@ -423,7 +430,7 @@ def undo_bid(player_id: int, current_user=Depends(get_current_user), db=Depends(
         team.spent = max(0, team.spent - player.sold_price)
         team.players_count = max(0, team.players_count - 1)
 
-    add_history_entry("undo", {"player": player.name, "team": player.team, "price": player.sold_price})
+    add_history_entry("undo", {"player": player.name, "team": player.team, "points": player.sold_price})
     player.sold_price = 0
     player.team = "Unsold"
     player.status = "Unsold"
@@ -449,7 +456,7 @@ def unsold(player_id: int, current_user=Depends(get_current_user), db=Depends(ge
             team.spent = max(0, team.spent - player.sold_price)
             team.players_count = max(0, team.players_count - 1)
 
-    add_history_entry("unsold", {"player": player.name, "price": player.sold_price})
+    add_history_entry("unsold", {"player": player.name, "points": player.sold_price})
     player.sold_price = 0
     player.team = "Unsold"
     player.status = "Unsold"
@@ -503,7 +510,7 @@ def edit_sale(player_id: int, price: int, current_user=Depends(get_current_user)
     if not team:
         raise HTTPException(status_code=404, detail="Assigned team not found")
     if price < player.base_price:
-        raise HTTPException(status_code=400, detail=f"Price must be at least base price {player.base_price}")
+        raise HTTPException(status_code=400, detail=f"Points must be at least base points {player.base_price}")
 
     adjusted_spent = team.spent - player.sold_price + price
     if adjusted_spent > team.budget:
@@ -519,7 +526,7 @@ def edit_sale(player_id: int, price: int, current_user=Depends(get_current_user)
 
     add_history_entry(
         "edit_sale",
-        {"player": player.name, "team": team.name, "old_price": old_price, "price": price},
+        {"player": player.name, "team": team.name, "old_points": old_price, "points": price},
     )
     push_update(db, "edit_sale")
     return {"message": "Sale updated"}
@@ -551,11 +558,14 @@ def reset_auction(current_user=Depends(get_current_user), db=Depends(get_db)):
 def export_csv(current_user=Depends(get_current_user), db=Depends(get_db)):
     buffer = io.StringIO()
     writer = csv.writer(buffer)
-    writer.writerow(["Player", "Category", "Base Price", "Sold Price", "Team", "Captain", "Status"])
+    writer.writerow(["Player", "Category", "Base Points", "Sold Points", "Team", "Owner", "Captain", "Status"])
 
     for player in db.query(Player).order_by(Player.id.asc()).all():
-        captain = TEAM_CAPTAINS.get(player.team, "") if player.team != "Unsold" else ""
-        writer.writerow([player.name, player.category, player.base_price, player.sold_price, player.team, captain, player.status])
+        meta = TEAM_META.get(player.team, {}) if player.team != "Unsold" else {}
+        display_name = meta.get("display_name", player.team)
+        owner = meta.get("owner", "")
+        captain = meta.get("captain", "")
+        writer.writerow([player.name, player.category, player.base_price, player.sold_price, display_name, owner, captain, player.status])
 
     return Response(
         content=buffer.getvalue(),
