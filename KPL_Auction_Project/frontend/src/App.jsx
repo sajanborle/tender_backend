@@ -486,7 +486,6 @@ function Dashboard({ token, onLogout }) {
                 <button onClick={sell} disabled={!canSell} style={{ padding: 12, borderRadius: 10, border: "none", background: canSell ? "#10b981" : "#335f50", color: "white", fontWeight: 800, cursor: canSell ? "pointer" : "not-allowed" }}>Sold</button>
                 <button onClick={() => actOnPlayer("/undo_bid")} style={{ padding: 12, borderRadius: 10, border: "none", background: "#f59e0b", color: "white", fontWeight: 800, cursor: "pointer" }}>Undo</button>
                 <button onClick={() => actOnPlayer("/unsold")} style={{ padding: 12, borderRadius: 10, border: "none", background: "#0ea5e9", color: "white", fontWeight: 800, cursor: "pointer" }}>Force Unsold</button>
-                <button onClick={skip} style={{ padding: 12, borderRadius: 10, border: "none", background: "#8b5cf6", color: "white", fontWeight: 800, cursor: "pointer" }}>Skip Player</button>
                 <button onClick={resetAuction} style={{ padding: 12, borderRadius: 10, border: "none", background: theme.danger, color: "white", fontWeight: 800, cursor: "pointer" }}>Reset</button>
               </div>
 
