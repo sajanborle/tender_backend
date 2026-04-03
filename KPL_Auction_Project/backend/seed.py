@@ -3,6 +3,14 @@ from models import Player, Team
 
 db = SessionLocal()
 
+PREASSIGNED_PLAYERS = [
+    {
+        "player_name": "Milind Pawar",
+        "team_db_name": "Chandrakant Borle",
+        "points": 0,
+    }
+]
+
 # Clear existing data
 db.query(Player).delete()
 db.query(Team).delete()
@@ -215,6 +223,18 @@ for name, cat, price in players:
 
 for team in teams:
     db.add(Team(name=team["db_name"]))
+
+db.commit()
+
+for assignment in PREASSIGNED_PLAYERS:
+    player = db.query(Player).filter(Player.name == assignment["player_name"]).first()
+    team = db.query(Team).filter(Team.name == assignment["team_db_name"]).first()
+    if player and team:
+        player.sold_price = assignment["points"]
+        player.team = team.name
+        player.status = "Sold"
+        team.players_count += 1
+        team.spent += assignment["points"]
 
 db.commit()
 

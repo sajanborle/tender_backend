@@ -35,6 +35,13 @@ TEAM_META = {
     "Mahesh Dhadve": {"display_name": "Harsh 11", "owner": "Mahesh Dhadve", "captain": "Yash Pawar"},
     "Prasad Borle": {"display_name": "Jeet 11", "owner": "Prasad Borle", "captain": "Avesh Pawar"},
 }
+PREASSIGNED_PLAYERS = [
+    {
+        "player_name": "Milind Pawar",
+        "team_key": "Chandrakant Borle",
+        "points": 0,
+    }
+]
 
 auction_state = {
     "current_player_id": None,
@@ -126,6 +133,20 @@ def add_history_entry(event_type: str, payload: dict):
     }
     auction_history.insert(0, entry)
     del auction_history[MAX_HISTORY_ITEMS:]
+
+
+def apply_preassigned_players(db):
+    for assignment in PREASSIGNED_PLAYERS:
+        player = db.query(Player).filter(Player.name == assignment["player_name"]).first()
+        team = db.query(Team).filter(Team.name == assignment["team_key"]).first()
+        if not player or not team:
+            continue
+
+        player.sold_price = assignment["points"]
+        player.team = team.name
+        player.status = "Sold"
+        team.players_count += 1
+        team.spent += assignment["points"]
 
 
 def get_next_unsold_player(db):
@@ -543,6 +564,7 @@ def reset_auction(current_user=Depends(get_current_user), db=Depends(get_db)):
         team.spent = 0
         team.players_count = 0
 
+    apply_preassigned_players(db)
     db.commit()
     auction_history.clear()
     auction_state["current_player_id"] = None
