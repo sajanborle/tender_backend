@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-const BASE_URL = "https://d6bb-114-143-92-37.ngrok-free.app";
+const BASE_URL = "https://f602-114-143-92-37.ngrok-free.app";
 const TIMER_SECONDS = 10;
 const BIG_POINTS_THRESHOLD = 300;
 
@@ -483,7 +483,7 @@ function Dashboard({ token, onLogout }) {
           {liveScreen}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
             <div style={panel}>
-              <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 12 }}>Recent Auction Events</div>
+              <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 12, color: theme.text }}>Recent Auction Events</div>
               <div style={{ display: "grid", gap: 10 }}>
                 {history.slice(0, 4).map(item => (
                   <div key={item.id} style={{ padding: 12, borderRadius: 14, background: theme.panel2, border: `1px solid ${theme.border}` }}>
@@ -494,7 +494,7 @@ function Dashboard({ token, onLogout }) {
               </div>
             </div>
             <div style={panel}>
-              <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 12 }}>Top Team Status</div>
+              <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 12, color: theme.text }}>Top Team Status</div>
               <div style={{ display: "grid", gap: 10 }}>
                 {leaderboard.slice(0, 4).map(item => (
                   <div key={item.team} style={{ padding: 12, borderRadius: 14, background: theme.panel2, border: `1px solid ${theme.border}` }}>
@@ -516,7 +516,7 @@ function Dashboard({ token, onLogout }) {
     <div style={{ minHeight: "100vh", background: theme.page, color: theme.text, fontFamily: "'Segoe UI', Tahoma, sans-serif" }}>
       <nav style={{ background: theme.panel, borderBottom: `1px solid ${theme.border}`, padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", position: "sticky", top: 0, zIndex: 10 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>KPL Auction Control Room</h1>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: theme.text }}>KPL Auction Control Room</h1>
           <p style={{ margin: "4px 0 0", fontSize: 12, color: theme.muted }}>Realtime bidding, laptop/mobile tracking, squads, timeline</p>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -550,7 +550,7 @@ function Dashboard({ token, onLogout }) {
 
         <div style={{ ...panel, marginBottom: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 14, flexWrap: "wrap" }}>
-            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Captain List</h2>
+            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: theme.text }}>Captain List</h2>
             <div style={{ color: theme.muted, fontSize: 13 }}>Team to captain mapping</div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
@@ -575,7 +575,7 @@ function Dashboard({ token, onLogout }) {
           <div style={{ display: "grid", gap: 20 }}>
             {liveScreen}
             <div style={panel}>
-              <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 12 }}>How To Use</h2>
+              <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 12, color: theme.text }}>How To Use</h2>
               <div style={{ display: "grid", gap: 8, color: theme.muted, lineHeight: 1.7 }}>
                 <div>1. Search and select the current player.</div>
                 <div>2. Select the bidding team.</div>
@@ -585,7 +585,7 @@ function Dashboard({ token, onLogout }) {
               </div>
             </div>
             <div style={panel}>
-              <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 12 }}>Auction Status</h2>
+              <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 12, color: theme.text }}>Auction Status</h2>
               <div style={{ padding: 14, borderRadius: 14, background: insufficientBudget ? "rgba(239,68,68,0.12)" : "rgba(18,189,248,0.10)", border: `1px solid ${insufficientBudget ? "rgba(239,68,68,0.3)" : theme.border}`, color: insufficientBudget ? theme.danger : theme.text, fontWeight: 700, marginBottom: 12 }}>
                 {auctionStatus}
               </div>
@@ -605,7 +605,7 @@ function Dashboard({ token, onLogout }) {
               </div>
             </div>
             <div style={panel}>
-              <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>Admin Control Panel</h2>
+              <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16, color: theme.text }}>Admin Control Panel</h2>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
                 <button onClick={startAuction} style={{ padding: "12px 16px", borderRadius: 10, border: "none", background: theme.accent, color: "white", fontWeight: 800, cursor: "pointer" }}>Start Auction</button>
                 <button onClick={skip} style={{ padding: "12px 16px", borderRadius: 10, border: "none", background: "#8b5cf6", color: "white", fontWeight: 800, cursor: "pointer" }}>Next Player</button>
@@ -669,13 +669,13 @@ function Dashboard({ token, onLogout }) {
 
           <div style={{ display: "grid", gap: 20 }}>
             <div style={panel}>
-              <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>Auction Timeline</h2>
+              <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16, color: theme.text }}>Auction Timeline</h2>
               <div style={{ display: "grid", gap: 12, maxHeight: 430, overflowY: "auto" }}>
                 {history.length ? history.map(item => <div key={item.id} style={{ padding: 14, borderRadius: 14, background: theme.panel2, border: `1px solid ${theme.border}` }}><div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 6, flexWrap: "wrap" }}><strong style={{ textTransform: "capitalize" }}>{item.type.replaceAll("_", " ")}</strong><span style={{ color: theme.muted, fontSize: 12 }}>{new Date(item.timestamp).toLocaleTimeString()}</span></div><div style={{ color: theme.muted, lineHeight: 1.6 }}>{[item.player, item.team ? getTeamLabel(item.team) : "", item.points ? formatPoints(item.points) : "", item.old_points ? `Old ${formatPoints(item.old_points)}` : ""].filter(Boolean).join(" · ") || "Auction event"}</div></div>) : <div style={{ color: theme.muted }}>No auction history yet.</div>}
               </div>
             </div>
             <div style={panel}>
-              <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>Leaderboard</h2>
+              <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16, color: theme.text }}>Leaderboard</h2>
               <div style={{ display: "grid", gap: 12 }}>
                 {leaderboard.map(item => <div key={item.team} style={{ background: theme.panel2, border: `1px solid ${theme.border}`, borderRadius: 16, padding: 16 }}><div style={{ fontSize: 16, fontWeight: 800, marginBottom: 6 }}>{item.team}</div><div style={{ fontSize: 13, color: theme.muted, marginBottom: 4 }}>Owner: <strong style={{ color: theme.text }}>{item.owner || "Not set"}</strong></div><div style={{ fontSize: 13, color: theme.muted, marginBottom: 10 }}>Captain: <strong style={{ color: theme.text }}>{item.captain || "Not set"}</strong></div><div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, fontSize: 13, color: theme.muted }}><div>Spent: <strong style={{ color: theme.text }}>{formatPoints(item.spent)}</strong></div><div>Left: <strong style={{ color: theme.success }}>{formatPoints(item.remaining)}</strong></div><div>Squad: <strong style={{ color: theme.accent }}>{item.players}</strong></div></div><div style={{ marginTop: 8, fontSize: 12, color: theme.muted }}>Auction players: {item.auction_players}</div></div>)}
               </div>

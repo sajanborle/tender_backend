@@ -48,7 +48,7 @@ teams = [
         "db_name": "Chetan Javlekar",
     },
     {
-        "team_name": "Krupath 11",
+        "team_name": "Kruparth 11",
         "owner": "Nagesh Kasrung",
         "captain": "Sanket Sawant",
         "db_name": "Nagesh Kasrung",

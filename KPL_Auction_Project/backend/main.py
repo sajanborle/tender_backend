@@ -31,7 +31,7 @@ TEAM_META = {
     "Arun Dhadve": {"display_name": "Mahi 11 Fighters", "owner": "Arun Dhadve", "captain": "Piyush Kobnak"},
     "Chandrakant Borle": {"display_name": "Nidhi Fighters", "owner": "Chandrakant Borle", "captain": "Shreyas Gije"},
     "Chetan Javlekar": {"display_name": "Bhai 11 Star", "owner": "Chetan Javlekar", "captain": "Rohit Javlekar"},
-    "Nagesh Kasrung": {"display_name": "Krupath 11", "owner": "Nagesh Kasrung", "captain": "Sanket Sawant"},
+    "Nagesh Kasrung": {"display_name": "Kruparth 11", "owner": "Nagesh Kasrung", "captain": "Sanket Sawant"},
     "Mahesh Dhadve": {"display_name": "Harsh 11", "owner": "Mahesh Dhadve", "captain": "Yash Pawar"},
     "Prasad Borle": {"display_name": "Jeet 11", "owner": "Prasad Borle", "captain": "Avesh Pawar"},
 }
