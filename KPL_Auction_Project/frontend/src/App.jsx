@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const BASE_URL = "https://88d8-114-143-92-37.ngrok-free.app";
+const BASE_URL = "https://e69e-114-143-92-37.ngrok-free.app";
 
 const fetchAPI = async (url, options = {}) => {
   const res = await fetch(url, {
@@ -106,6 +106,9 @@ function Dashboard({ token, onLogout }) {
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [bid, setBid] = useState("");
   const [filter, setFilter] = useState("");
+  const [playerSearch, setPlayerSearch] = useState("");
+  const [playerCategoryFilter, setPlayerCategoryFilter] = useState("");
+  const [teamSearch, setTeamSearch] = useState("");
   const [activeTab, setActiveTab] = useState("auction");
   const [highestSold, setHighestSold] = useState(null);
 
@@ -174,6 +177,17 @@ function Dashboard({ token, onLogout }) {
     }
   };
 
+  const unsoldPlayers = players.filter(player => player.status === "Unsold");
+  const playerCategories = [...new Set(unsoldPlayers.map(player => player.category).filter(Boolean))];
+  const filteredAuctionPlayers = unsoldPlayers.filter(player => {
+    const matchesSearch = player.name.toLowerCase().includes(playerSearch.toLowerCase());
+    const matchesCategory = !playerCategoryFilter || player.category === playerCategoryFilter;
+    return matchesSearch && matchesCategory;
+  });
+  const filteredAuctionTeams = teams.filter(team =>
+    team.name.toLowerCase().includes(teamSearch.toLowerCase())
+  );
+
   return (
     <div style={{ minHeight: "100vh", background: "#0a0e27", color: "#e2e8f0", fontFamily: "'Segoe UI', Tahoma, sans-serif" }}>
       {highestSold && (
@@ -231,17 +245,45 @@ function Dashboard({ token, onLogout }) {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "12px", marginBottom: "16px" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#94a3b8", marginBottom: "6px" }}>Select Player</label>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 140px", gap: "8px", marginBottom: "8px" }}>
+                    <input
+                      value={playerSearch}
+                      onChange={e => setPlayerSearch(e.target.value)}
+                      placeholder="Search player..."
+                      style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid rgba(226,232,240,0.2)", background: "#0f172a", color: "#f8fafc", fontSize: "14px", boxSizing: "border-box" }}
+                    />
+                    <select
+                      value={playerCategoryFilter}
+                      onChange={e => setPlayerCategoryFilter(e.target.value)}
+                      style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid rgba(226,232,240,0.2)", background: "#0f172a", color: "#f8fafc", fontSize: "14px", boxSizing: "border-box" }}
+                    >
+                      <option value="">All Types</option>
+                      {playerCategories.map(category => <option key={category} value={category}>{category}</option>)}
+                    </select>
+                  </div>
                   <select value={selectedPlayer?.id || ""} onChange={e => setSelectedPlayer(players.find(p => p.id == e.target.value))} style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid rgba(226,232,240,0.2)", background: "#0f172a", color: "#f8fafc", fontSize: "14px", boxSizing: "border-box" }}>
                     <option value="">Choose a player...</option>
-                    {players.filter(p => p.status === "Unsold").map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    {filteredAuctionPlayers.map(p => <option key={p.id} value={p.id}>{p.name} ({p.category})</option>)}
                   </select>
+                  <div style={{ marginTop: "6px", fontSize: "12px", color: "#64748b" }}>
+                    {filteredAuctionPlayers.length} player{filteredAuctionPlayers.length !== 1 ? "s" : ""} found
+                  </div>
                 </div>
                 <div>
                   <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#94a3b8", marginBottom: "6px" }}>Select Team</label>
+                  <input
+                    value={teamSearch}
+                    onChange={e => setTeamSearch(e.target.value)}
+                    placeholder="Search team..."
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid rgba(226,232,240,0.2)", background: "#0f172a", color: "#f8fafc", fontSize: "14px", boxSizing: "border-box", marginBottom: "8px" }}
+                  />
                   <select value={selectedTeam?.id || ""} onChange={e => setSelectedTeam(teams.find(t => t.id == e.target.value))} style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid rgba(226,232,240,0.2)", background: "#0f172a", color: "#f8fafc", fontSize: "14px", boxSizing: "border-box" }}>
                     <option value="">Choose a team...</option>
-                    {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    {filteredAuctionTeams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                   </select>
+                  <div style={{ marginTop: "6px", fontSize: "12px", color: "#64748b" }}>
+                    {filteredAuctionTeams.length} team{filteredAuctionTeams.length !== 1 ? "s" : ""} found
+                  </div>
                 </div>
                 <div>
                   <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#94a3b8", marginBottom: "6px" }}>Bid Amount (₹)</label>
@@ -333,6 +375,8 @@ export default function App() {
   const storedToken = localStorage.getItem("token") || "";
   const [token, setToken] = useState(storedToken);
   const [page, setPage] = useState(storedToken ? "dashboard" : "auth");
+
+  
 
   const onAuthSuccess = (newToken) => {
     setToken(newToken);
