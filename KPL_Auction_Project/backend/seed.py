@@ -74,13 +74,13 @@ players = [
 ("Sajan Borle","Star",100),
 ("Rohan Kasrung","Star",100),
 ("Suraj Kasrung","Star",100),
-("Amit Shigwan","A1",100),
+("Amit Shigwan","Star",100),
 ("Vinit Pawar","Star",100),
 ("Pratesh Kobnak","Star",100),
 ("Vaibhav Karandekar","Star",100),
 
 # A1
-("Prashant Kasrung","Star",100),
+("Prashant Kasrung","A1",100),
 ("Rupesh Borle","A1",100),
 ("Tejas Pawar","A1",100),
 ("Hitesh Kobnak","A1",100),
