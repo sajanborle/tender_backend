@@ -25,6 +25,16 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 DEFAULT_TIMER_SECONDS = 10
 MAX_HISTORY_ITEMS = 50
+TEAM_CAPTAINS = {
+    "Sagar Shigwan": "Pravin Kobnak",
+    "Mukund Borle": "Vivek Kobnak",
+    "Arun Dhadve": "Piyush Kobnak",
+    "Chandrakant Borle": "Shreyas Gije",
+    "Chetan Javlekar": "Rohit Javlekar",
+    "Nagesh Kasrung": "Sanket Sawant",
+    "Mahesh Dhadve": "Yash Pawar",
+    "Prasad Borle": "Avesh Pawar",
+}
 
 auction_state = {
     "current_player_id": None,
@@ -161,13 +171,16 @@ def serialize_player(player):
 def serialize_team(team):
     if not team:
         return None
+    captain = TEAM_CAPTAINS.get(team.name, "")
     return {
         "id": team.id,
         "name": team.name,
+        "captain": captain,
         "budget": team.budget,
         "spent": team.spent,
         "remaining": team.budget - team.spent,
         "players_count": team.players_count,
+        "total_members": team.players_count + (1 if captain else 0),
     }
 
 
@@ -282,7 +295,8 @@ def get_players(db=Depends(get_db)):
 
 @app.get("/teams")
 def get_teams(db=Depends(get_db)):
-    return db.query(Team).order_by(Team.id.asc()).all()
+    teams = db.query(Team).order_by(Team.id.asc()).all()
+    return [serialize_team(team) for team in teams]
 
 
 @app.get("/leaderboard")
@@ -291,9 +305,11 @@ def leaderboard(db=Depends(get_db)):
     return [
         {
             "team": team.name,
+            "captain": TEAM_CAPTAINS.get(team.name, ""),
             "spent": team.spent,
             "remaining": team.budget - team.spent,
-            "players": team.players_count,
+            "players": team.players_count + (1 if TEAM_CAPTAINS.get(team.name) else 0),
+            "auction_players": team.players_count,
         }
         for team in teams
     ]
@@ -535,10 +551,11 @@ def reset_auction(current_user=Depends(get_current_user), db=Depends(get_db)):
 def export_csv(current_user=Depends(get_current_user), db=Depends(get_db)):
     buffer = io.StringIO()
     writer = csv.writer(buffer)
-    writer.writerow(["Player", "Category", "Base Price", "Sold Price", "Team", "Status"])
+    writer.writerow(["Player", "Category", "Base Price", "Sold Price", "Team", "Captain", "Status"])
 
     for player in db.query(Player).order_by(Player.id.asc()).all():
-        writer.writerow([player.name, player.category, player.base_price, player.sold_price, player.team, player.status])
+        captain = TEAM_CAPTAINS.get(player.team, "") if player.team != "Unsold" else ""
+        writer.writerow([player.name, player.category, player.base_price, player.sold_price, player.team, captain, player.status])
 
     return Response(
         content=buffer.getvalue(),
