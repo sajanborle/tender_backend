@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 const BASE_URL = "https://d6bb-114-143-92-37.ngrok-free.app";
 const TIMER_SECONDS = 10;
+const BIG_POINTS_THRESHOLD = 300;
 
 const THEMES = {
   dark: { page: "#08111f", panel: "rgba(13,24,42,0.88)", panel2: "rgba(20,37,63,0.9)", border: "rgba(148,163,184,0.18)", text: "#e6eefb", muted: "#8ea5c2", accent: "#12bdf8", success: "#22c55e", danger: "#ef4444", hero: "linear-gradient(135deg,#071321 0%,#0f3157 52%,#0b8f9f 100%)" },
@@ -133,11 +134,15 @@ function Dashboard({ token, onLogout }) {
   const [teamIndex, setTeamIndex] = useState(0);
   const [tab, setTab] = useState("auction");
   const [themeName, setThemeName] = useState(() => localStorage.getItem("auction-theme") || "dark");
+  const [screenMode, setScreenMode] = useState(() => new URLSearchParams(window.location.search).get("screen") || "admin");
   const [adminPlayerId, setAdminPlayerId] = useState("");
   const [editPrice, setEditPrice] = useState("");
   const [timer, setTimer] = useState(TIMER_SECONDS);
   const [socketLive, setSocketLive] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [soldBanner, setSoldBanner] = useState(null);
+  const [bigPointsBanner, setBigPointsBanner] = useState(null);
+  const announcedSoldRef = useRef("");
   const sounds = useAuctionSounds(soundEnabled);
   const theme = THEMES[themeName];
   const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
@@ -200,14 +205,45 @@ function Dashboard({ token, onLogout }) {
   useEffect(() => { loadAll(); }, []);
   useEffect(() => { localStorage.setItem("auction-theme", themeName); }, [themeName]);
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (screenMode === "admin") params.delete("screen");
+    else params.set("screen", screenMode);
+    const query = params.toString();
+    window.history.replaceState({}, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
+  }, [screenMode]);
+  useEffect(() => {
     if (!auctionState) return;
     setBid(String(auctionState.current_bid || auctionState.current_player?.base_price || ""));
     if (auctionState.current_team) setTeamId(String(auctionState.current_team.id));
     if (auctionState.event === "sold") {
       sounds.hammer();
       sounds.cheer();
+      const sale = history[0];
+      const saleKey = sale ? `${sale.player}-${sale.team}-${sale.points}` : "";
+      if (sale && saleKey && announcedSoldRef.current !== saleKey) {
+        announcedSoldRef.current = saleKey;
+        setSoldBanner(sale);
+        if ((sale.points || 0) >= BIG_POINTS_THRESHOLD) setBigPointsBanner(sale);
+        if (soundEnabled && "speechSynthesis" in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(`${sale.player} sold to ${getTeamLabel(sale.team)} for ${sale.points} points`);
+          utterance.rate = 1;
+          utterance.pitch = 1;
+          window.speechSynthesis.speak(utterance);
+        }
+      }
     }
   }, [auctionState]);
+  useEffect(() => {
+    if (!soldBanner) return;
+    const id = window.setTimeout(() => setSoldBanner(null), 8000);
+    return () => window.clearTimeout(id);
+  }, [soldBanner]);
+  useEffect(() => {
+    if (!bigPointsBanner) return;
+    const id = window.setTimeout(() => setBigPointsBanner(null), 12000);
+    return () => window.clearTimeout(id);
+  }, [bigPointsBanner]);
   useEffect(() => {
     if (!auctionState?.last_bid_at) return setTimer(TIMER_SECONDS);
     const update = () => {
@@ -380,6 +416,74 @@ function Dashboard({ token, onLogout }) {
     </div>
   );
 
+  const soldBannerView = soldBanner ? (
+    <div style={{ background: "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)", color: "#fff", padding: "18px 22px", borderRadius: 20, boxShadow: "0 18px 40px rgba(239,68,68,0.28)" }}>
+      <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 6 }}>Player Sold</div>
+      <div style={{ fontSize: 32, fontWeight: 900, lineHeight: 1.05, marginBottom: 8 }}>{soldBanner.player}</div>
+      <div style={{ fontSize: 18, lineHeight: 1.6 }}>
+        Sold to <strong>{getTeamLabel(soldBanner.team)}</strong> for <strong>{formatPoints(soldBanner.points)}</strong>
+      </div>
+    </div>
+  ) : null;
+
+  const bigPointsBannerView = bigPointsBanner ? (
+    <div style={{ background: "linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)", color: "#fff", padding: "18px 22px", borderRadius: 20, boxShadow: "0 18px 40px rgba(124,58,237,0.28)" }}>
+      <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 6 }}>Big Points Sale</div>
+      <div style={{ fontSize: 32, fontWeight: 900, lineHeight: 1.05, marginBottom: 8 }}>{bigPointsBanner.player}</div>
+      <div style={{ fontSize: 18, lineHeight: 1.6 }}>
+        Massive sale to <strong>{getTeamLabel(bigPointsBanner.team)}</strong> for <strong>{formatPoints(bigPointsBanner.points)}</strong>
+      </div>
+    </div>
+  ) : null;
+
+  if (screenMode === "tv") {
+    return (
+      <div style={{ minHeight: "100vh", background: theme.page, color: theme.text, fontFamily: "'Segoe UI', Tahoma, sans-serif", padding: 24 }}>
+        <div style={{ maxWidth: 1600, margin: "0 auto", display: "grid", gap: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontSize: 14, letterSpacing: "0.12em", textTransform: "uppercase", color: theme.muted, marginBottom: 6 }}>KPL Live Auction TV Mode</div>
+              <div style={{ fontSize: 28, fontWeight: 900 }}>{socketLive ? "Socket Live" : "Waiting For Live Socket"}</div>
+            </div>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button onClick={() => setThemeName(current => current === "dark" ? "light" : "dark")} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${theme.border}`, background: theme.panel2, color: theme.text, cursor: "pointer", fontWeight: 700 }}>{themeName === "dark" ? "Light Theme" : "Dark Theme"}</button>
+              <button onClick={() => setScreenMode("admin")} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${theme.border}`, background: theme.panel2, color: theme.text, cursor: "pointer", fontWeight: 700 }}>Back To Admin</button>
+            </div>
+          </div>
+          {soldBannerView}
+          {bigPointsBannerView}
+          {liveScreen}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+            <div style={panel}>
+              <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 12 }}>Recent Auction Events</div>
+              <div style={{ display: "grid", gap: 10 }}>
+                {history.slice(0, 4).map(item => (
+                  <div key={item.id} style={{ padding: 12, borderRadius: 14, background: theme.panel2, border: `1px solid ${theme.border}` }}>
+                    <div style={{ fontWeight: 800, textTransform: "capitalize", marginBottom: 4 }}>{item.type.replaceAll("_", " ")}</div>
+                    <div style={{ color: theme.muted, lineHeight: 1.6 }}>{[item.player, item.team ? getTeamLabel(item.team) : "", item.points ? formatPoints(item.points) : ""].filter(Boolean).join(" · ")}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={panel}>
+              <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 12 }}>Top Team Status</div>
+              <div style={{ display: "grid", gap: 10 }}>
+                {leaderboard.slice(0, 4).map(item => (
+                  <div key={item.team} style={{ padding: 12, borderRadius: 14, background: theme.panel2, border: `1px solid ${theme.border}` }}>
+                    <div style={{ fontWeight: 800, marginBottom: 4 }}>{item.team}</div>
+                    <div style={{ color: theme.muted }}>Owner: {item.owner}</div>
+                    <div style={{ color: theme.muted }}>Captain: {item.captain}</div>
+                    <div style={{ color: theme.text, marginTop: 6 }}>{formatPoints(item.spent)} spent · {formatPoints(item.remaining)} left</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ minHeight: "100vh", background: theme.page, color: theme.text, fontFamily: "'Segoe UI', Tahoma, sans-serif" }}>
       <nav style={{ background: theme.panel, borderBottom: `1px solid ${theme.border}`, padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", position: "sticky", top: 0, zIndex: 10 }}>
@@ -389,12 +493,15 @@ function Dashboard({ token, onLogout }) {
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <button onClick={() => setThemeName(current => current === "dark" ? "light" : "dark")} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${theme.border}`, background: theme.panel2, color: theme.text, cursor: "pointer", fontWeight: 700 }}>{themeName === "dark" ? "Light Theme" : "Dark Theme"}</button>
+          <button onClick={() => setScreenMode("tv")} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${theme.border}`, background: theme.panel2, color: theme.text, cursor: "pointer", fontWeight: 700 }}>TV Mode</button>
           <button onClick={() => setSoundEnabled(v => !v)} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${theme.border}`, background: theme.panel2, color: theme.text, cursor: "pointer", fontWeight: 700 }}>{soundEnabled ? "Mute Sounds" : "Enable Sounds"}</button>
           <button onClick={onLogout} style={{ padding: "10px 16px", borderRadius: 999, border: "none", background: theme.danger, color: "white", cursor: "pointer", fontWeight: 700 }}>Logout</button>
         </div>
       </nav>
 
       <div style={{ maxWidth: 1480, margin: "0 auto", padding: "24px 16px 40px" }}>
+        {soldBannerView ? <div style={{ marginBottom: 20 }}>{soldBannerView}</div> : null}
+        {bigPointsBannerView ? <div style={{ marginBottom: 20 }}>{bigPointsBannerView}</div> : null}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: 20 }}>
           <div style={panel}>
             <div style={{ fontSize: 12, color: theme.muted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Unsold Players</div>
