@@ -10,13 +10,13 @@ db.commit()
 
 teams = [
     {
-        "team_name": "Royal Worriers",
+        "team_name": "Royal Warriors",
         "owner": "Sagar Shigwan",
         "captain": "Pravin Kobnak",
         "db_name": "Sagar Shigwan",
     },
     {
-        "team_name": "Shur Shivba Worries",
+        "team_name": "Shur Shivba Warriors",
         "owner": "Mukund Borle",
         "captain": "Vivek Kobnak",
         "db_name": "Mukund Borle",

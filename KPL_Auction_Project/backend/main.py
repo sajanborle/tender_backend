@@ -26,8 +26,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 DEFAULT_TIMER_SECONDS = 10
 MAX_HISTORY_ITEMS = 50
 TEAM_META = {
-    "Sagar Shigwan": {"display_name": "Royal Worriers", "owner": "Sagar Shigwan", "captain": "Pravin Kobnak"},
-    "Mukund Borle": {"display_name": "Shur Shivba Worries", "owner": "Mukund Borle", "captain": "Vivek Kobnak"},
+    "Sagar Shigwan": {"display_name": "Royal Warriors", "owner": "Sagar Shigwan", "captain": "Pravin Kobnak"},
+    "Mukund Borle": {"display_name": "Shur Shivba Warriors", "owner": "Mukund Borle", "captain": "Vivek Kobnak"},
     "Arun Dhadve": {"display_name": "Mahi 11 Fighters", "owner": "Arun Dhadve", "captain": "Piyush Kobnak"},
     "Chandrakant Borle": {"display_name": "Nidhi Fighters", "owner": "Chandrakant Borle", "captain": "Shreyas Gije"},
     "Chetan Javlekar": {"display_name": "Bhai 11 Star", "owner": "Chetan Javlekar", "captain": "Rohit Javlekar"},
