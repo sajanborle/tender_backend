@@ -107,8 +107,8 @@ function AuthForm({ onAuthSuccess }) {
       <div style={{ flex: 1, background: "linear-gradient(135deg, rgba(14,165,233,0.92) 0%, rgba(6,182,212,0.88) 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", padding: 40 }}>
         <div style={{ textAlign: "center", maxWidth: 460 }}>
           <div style={{ fontSize: 84, marginBottom: 24 }}>🏆</div>
-          <h2 style={{ fontSize: 32, fontWeight: 800, marginBottom: 16 }}>Live Auction Arena</h2>
-          <p style={{ fontSize: 17, color: "rgba(255,255,255,0.88)", lineHeight: 1.7 }}>Current-player TV screen, live timer, quick bid buttons, squad view, history, export, and realtime auction control.</p>
+          <h2 style={{ fontSize: 32, fontWeight: 800, marginBottom: 16 }}>Live Auction Dashboard</h2>
+          <p style={{ fontSize: 17, color: "rgba(255,255,255,0.88)", lineHeight: 1.7 }}>Mobile and laptop friendly auction control with live timer, quick bid buttons, squad view, history, export, and realtime updates.</p>
         </div>
       </div>
     </div>
@@ -132,7 +132,6 @@ function Dashboard({ token, onLogout }) {
   const [teamIndex, setTeamIndex] = useState(0);
   const [tab, setTab] = useState("auction");
   const [themeName, setThemeName] = useState(() => localStorage.getItem("auction-theme") || "dark");
-  const [screenMode, setScreenMode] = useState(() => new URLSearchParams(window.location.search).get("screen") || "admin");
   const [adminPlayerId, setAdminPlayerId] = useState("");
   const [editPrice, setEditPrice] = useState("");
   const [timer, setTimer] = useState(TIMER_SECONDS);
@@ -157,6 +156,15 @@ function Dashboard({ token, onLogout }) {
     return { ...team, members, categories: countByCategory(members), remaining: team.budget - team.spent };
   });
   const canSell = Boolean(currentPlayer && selectedTeam && workingBid >= (currentPlayer?.base_price || 0) && !insufficientBudget);
+  const auctionStatus = !currentPlayer
+    ? "No current player selected yet."
+    : !selectedTeam
+      ? "Select a team to start live bidding."
+      : insufficientBudget
+        ? "Selected team does not have enough budget for this bid."
+        : workingBid < (currentPlayer?.base_price || 0)
+          ? `Bid must be at least ${formatCurrency(currentPlayer?.base_price)}.`
+          : "Ready to sell this player.";
   const inputStyle = { width: "100%", padding: "11px 12px", borderRadius: 10, border: `1px solid ${theme.border}`, background: theme.panel2, color: theme.text, fontSize: 14, boxSizing: "border-box" };
   const panel = { background: theme.panel, border: `1px solid ${theme.border}`, borderRadius: 20, padding: 22, boxShadow: themeName === "dark" ? "0 20px 48px rgba(0,194,255,0.14)" : "0 16px 40px rgba(15,111,255,0.10)" };
 
@@ -184,11 +192,6 @@ function Dashboard({ token, onLogout }) {
 
   useEffect(() => { loadAll(); }, []);
   useEffect(() => { localStorage.setItem("auction-theme", themeName); }, [themeName]);
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    params.set("screen", screenMode);
-    window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
-  }, [screenMode]);
   useEffect(() => {
     if (!auctionState) return;
     setBid(String(auctionState.current_bid || auctionState.current_player?.base_price || ""));
@@ -323,9 +326,19 @@ function Dashboard({ token, onLogout }) {
     if (event.key === "ArrowUp") { event.preventDefault(); setTeamIndex(i => (i - 1 + filteredTeams.length) % filteredTeams.length); }
     if (event.key === "Enter") { event.preventDefault(); setTeamId(String((filteredTeams[teamIndex] || filteredTeams[0]).id)); }
   };
+  const startAuction = async () => {
+    const firstUnsoldPlayer = players.find(player => player.status === "Unsold");
+    if (!firstUnsoldPlayer) return alert("No unsold players available");
+    await selectPlayer(firstUnsoldPlayer);
+  };
+  const clearSelection = () => {
+    setTeamId("");
+    setBid(String(currentPlayer?.base_price || ""));
+    setTeamSearch("");
+  };
 
   const liveScreen = (
-    <div style={{ ...panel, background: theme.hero, color: "#fff", position: "relative", overflow: "hidden", minHeight: screenMode === "tv" ? "calc(100vh - 48px)" : "auto" }}>
+    <div style={{ ...panel, background: theme.hero, color: "#fff", position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at top right, rgba(255,255,255,0.22), transparent 34%)" }} />
       <div style={{ position: "relative" }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 18 }}>
@@ -339,16 +352,16 @@ function Dashboard({ token, onLogout }) {
           </div>
         </div>
         <div style={{ fontSize: 13, letterSpacing: "0.16em", textTransform: "uppercase", opacity: 0.78, marginBottom: 12 }}>Current Player</div>
-        <div style={{ fontSize: screenMode === "tv" ? 66 : 46, lineHeight: 1.05, fontWeight: 900, marginBottom: 12 }}>{currentPlayer?.name || "Auction Complete"}</div>
+        <div style={{ fontSize: 46, lineHeight: 1.05, fontWeight: 900, marginBottom: 12 }}>{currentPlayer?.name || "Auction Complete"}</div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 18 }}>
           <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,0.14)", fontWeight: 700 }}>Category: {currentPlayer?.category || "-"}</div>
           <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,0.14)", fontWeight: 700 }}>Base: {formatCurrency(currentPlayer?.base_price)}</div>
           <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,0.14)", fontWeight: 700 }}>Team: {auctionState?.current_team?.name || selectedTeam?.name || "Waiting"}</div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: screenMode === "tv" ? "1fr" : "1.5fr 1fr", gap: 18, alignItems: "end" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18, alignItems: "end" }}>
           <div style={{ padding: 24, borderRadius: 22, background: "rgba(3,10,22,0.34)", border: "1px solid rgba(255,255,255,0.12)" }}>
             <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.12em", opacity: 0.76, marginBottom: 8 }}>Current Bid</div>
-            <div style={{ fontSize: screenMode === "tv" ? 76 : 54, lineHeight: 1, fontWeight: 900 }}>{formatCurrency(currentBid)}</div>
+            <div style={{ fontSize: 54, lineHeight: 1, fontWeight: 900 }}>{formatCurrency(currentBid)}</div>
           </div>
           <div style={{ padding: 18, borderRadius: 20, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.14)" }}>
             <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.12em", opacity: 0.76, marginBottom: 8 }}>Latest Event</div>
@@ -360,38 +373,84 @@ function Dashboard({ token, onLogout }) {
     </div>
   );
 
-  if (screenMode === "tv") {
-    return <div style={{ minHeight: "100vh", background: theme.page, padding: 24, fontFamily: "'Segoe UI', Tahoma, sans-serif" }}>{liveScreen}</div>;
-  }
-
   return (
     <div style={{ minHeight: "100vh", background: theme.page, color: theme.text, fontFamily: "'Segoe UI', Tahoma, sans-serif" }}>
       <nav style={{ background: theme.panel, borderBottom: `1px solid ${theme.border}`, padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", position: "sticky", top: 0, zIndex: 10 }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>KPL Auction Control Room</h1>
-          <p style={{ margin: "4px 0 0", fontSize: 12, color: theme.muted }}>Realtime bidding, TV display, squads, timeline</p>
+          <p style={{ margin: "4px 0 0", fontSize: 12, color: theme.muted }}>Realtime bidding, laptop/mobile tracking, squads, timeline</p>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <button onClick={() => setThemeName(current => current === "dark" ? "light" : "dark")} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${theme.border}`, background: theme.panel2, color: theme.text, cursor: "pointer", fontWeight: 700 }}>{themeName === "dark" ? "Light Theme" : "Dark Theme"}</button>
-          <button onClick={() => setScreenMode("tv")} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${theme.border}`, background: theme.panel2, color: theme.text, cursor: "pointer", fontWeight: 700 }}>TV Screen</button>
           <button onClick={() => setSoundEnabled(v => !v)} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${theme.border}`, background: theme.panel2, color: theme.text, cursor: "pointer", fontWeight: 700 }}>{soundEnabled ? "Mute Sounds" : "Enable Sounds"}</button>
           <button onClick={onLogout} style={{ padding: "10px 16px", borderRadius: 999, border: "none", background: theme.danger, color: "white", cursor: "pointer", fontWeight: 700 }}>Logout</button>
         </div>
       </nav>
 
       <div style={{ maxWidth: 1480, margin: "0 auto", padding: "24px 16px 40px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: 20 }}>
+          <div style={panel}>
+            <div style={{ fontSize: 12, color: theme.muted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Unsold Players</div>
+            <div style={{ fontSize: 30, fontWeight: 800 }}>{players.filter(player => player.status === "Unsold").length}</div>
+          </div>
+          <div style={panel}>
+            <div style={{ fontSize: 12, color: theme.muted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Current Team</div>
+            <div style={{ fontSize: 20, fontWeight: 800 }}>{selectedTeam?.name || "Not Selected"}</div>
+          </div>
+          <div style={panel}>
+            <div style={{ fontSize: 12, color: theme.muted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Connection</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: socketLive ? theme.success : theme.danger }}>{socketLive ? "Live" : "Offline"}</div>
+          </div>
+        </div>
+
         <div style={{ display: "flex", gap: 8, marginBottom: 24, borderBottom: `1px solid ${theme.border}`, paddingBottom: 16, flexWrap: "wrap" }}>
           {["auction", "leaderboard", "players", "history"].map(name => <button key={name} onClick={() => setTab(name)} style={{ padding: "10px 16px", borderRadius: 999, border: "none", background: tab === name ? theme.accent : "transparent", color: tab === name ? "white" : theme.muted, cursor: "pointer", fontWeight: 700, textTransform: "capitalize" }}>{name}</button>)}
         </div>
-        {tab === "auction" && <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 20 }}>
+        {tab === "auction" && <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
           <div style={{ display: "grid", gap: 20 }}>
             {liveScreen}
             <div style={panel}>
+              <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 12 }}>How To Use</h2>
+              <div style={{ display: "grid", gap: 8, color: theme.muted, lineHeight: 1.7 }}>
+                <div>1. Search and select the current player.</div>
+                <div>2. Select the bidding team.</div>
+                <div>3. Use quick increment buttons or type the amount.</div>
+                <div>4. Click `Set Live Bid` to update all devices.</div>
+                <div>5. Click `Sold` when the auction closes for that player.</div>
+              </div>
+            </div>
+            <div style={panel}>
+              <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 12 }}>Auction Status</h2>
+              <div style={{ padding: 14, borderRadius: 14, background: insufficientBudget ? "rgba(239,68,68,0.12)" : "rgba(18,189,248,0.10)", border: `1px solid ${insufficientBudget ? "rgba(239,68,68,0.3)" : theme.border}`, color: insufficientBudget ? theme.danger : theme.text, fontWeight: 700, marginBottom: 12 }}>
+                {auctionStatus}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10 }}>
+                <div style={{ padding: 12, borderRadius: 12, background: theme.panel2 }}>
+                  <div style={{ fontSize: 12, color: theme.muted, marginBottom: 4 }}>Current Player</div>
+                  <div style={{ fontWeight: 800 }}>{currentPlayer?.name || "Not selected"}</div>
+                </div>
+                <div style={{ padding: 12, borderRadius: 12, background: theme.panel2 }}>
+                  <div style={{ fontSize: 12, color: theme.muted, marginBottom: 4 }}>Selected Team</div>
+                  <div style={{ fontWeight: 800 }}>{selectedTeam?.name || "Not selected"}</div>
+                </div>
+                <div style={{ padding: 12, borderRadius: 12, background: theme.panel2 }}>
+                  <div style={{ fontSize: 12, color: theme.muted, marginBottom: 4 }}>Working Bid</div>
+                  <div style={{ fontWeight: 800 }}>{formatCurrency(workingBid)}</div>
+                </div>
+              </div>
+            </div>
+            <div style={panel}>
               <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>Admin Control Panel</h2>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
+                <button onClick={startAuction} style={{ padding: "12px 16px", borderRadius: 10, border: "none", background: theme.accent, color: "white", fontWeight: 800, cursor: "pointer" }}>Start Auction</button>
+                <button onClick={skip} style={{ padding: "12px 16px", borderRadius: 10, border: "none", background: "#8b5cf6", color: "white", fontWeight: 800, cursor: "pointer" }}>Next Player</button>
+                <button onClick={clearSelection} style={{ padding: "12px 16px", borderRadius: 10, border: `1px solid ${theme.border}`, background: theme.panel2, color: theme.text, fontWeight: 800, cursor: "pointer" }}>Clear Team / Bid</button>
+                <button onClick={loadAll} style={{ padding: "12px 16px", borderRadius: 10, border: `1px solid ${theme.border}`, background: theme.panel2, color: theme.text, fontWeight: 800, cursor: "pointer" }}>Refresh Data</button>
+              </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14, marginBottom: 18 }}>
                 <div>
                   <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: theme.muted, marginBottom: 6 }}>Select Player</label>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 150px", gap: 8, marginBottom: 8 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 8, marginBottom: 8 }}>
                     <input value={playerSearch} onChange={e => { setPlayerSearch(e.target.value); setPlayerIndex(0); }} onKeyDown={playerKeys} placeholder="Search player..." style={inputStyle} />
                     <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} style={inputStyle}><option value="">All Types</option>{categories.map(category => <option key={category} value={category}>{category}</option>)}</select>
                   </div>
@@ -411,7 +470,7 @@ function Dashboard({ token, onLogout }) {
                   <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: theme.muted, marginBottom: 6 }}>Bid Amount</label>
                   <input type="number" value={bid} onChange={e => setBid(e.target.value)} placeholder="Enter live bid" style={inputStyle} />
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginTop: 10 }}>{[100, 200, 500, 1000].map(value => <button key={value} onClick={() => increment(value)} style={{ padding: "10px 0", borderRadius: 10, border: "none", background: theme.accent, color: "white", fontWeight: 800, cursor: "pointer" }}>+{value}</button>)}</div>
-                  <button onClick={() => previewBid(workingBid)} style={{ marginTop: 10, width: "100%", padding: 11, borderRadius: 10, border: `1px solid ${theme.border}`, background: theme.panel2, color: theme.text, fontWeight: 700, cursor: "pointer" }}>Set Live Bid</button>
+                  <button onClick={() => previewBid(workingBid)} disabled={!currentPlayer || !selectedTeam} style={{ marginTop: 10, width: "100%", padding: 11, borderRadius: 10, border: `1px solid ${theme.border}`, background: !currentPlayer || !selectedTeam ? "#64748b" : theme.panel2, color: !currentPlayer || !selectedTeam ? "#e2e8f0" : theme.text, fontWeight: 700, cursor: !currentPlayer || !selectedTeam ? "not-allowed" : "pointer" }}>Set Live Bid</button>
                 </div>
               </div>
 
@@ -427,11 +486,10 @@ function Dashboard({ token, onLogout }) {
                 <button onClick={sell} disabled={!canSell} style={{ padding: 12, borderRadius: 10, border: "none", background: canSell ? "#10b981" : "#335f50", color: "white", fontWeight: 800, cursor: canSell ? "pointer" : "not-allowed" }}>Sold</button>
                 <button onClick={() => actOnPlayer("/undo_bid")} style={{ padding: 12, borderRadius: 10, border: "none", background: "#f59e0b", color: "white", fontWeight: 800, cursor: "pointer" }}>Undo</button>
                 <button onClick={() => actOnPlayer("/unsold")} style={{ padding: 12, borderRadius: 10, border: "none", background: "#0ea5e9", color: "white", fontWeight: 800, cursor: "pointer" }}>Force Unsold</button>
-                <button onClick={skip} style={{ padding: 12, borderRadius: 10, border: "none", background: "#8b5cf6", color: "white", fontWeight: 800, cursor: "pointer" }}>Skip Player</button>
                 <button onClick={resetAuction} style={{ padding: 12, borderRadius: 10, border: "none", background: theme.danger, color: "white", fontWeight: 800, cursor: "pointer" }}>Reset</button>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 180px auto", gap: 10, alignItems: "end", marginBottom: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, alignItems: "end", marginBottom: 12 }}>
                 <div><label style={{ display: "block", fontSize: 12, fontWeight: 700, color: theme.muted, marginBottom: 6 }}>Admin Target Player</label><select value={adminPlayerId} onChange={e => setAdminPlayerId(e.target.value)} style={inputStyle}><option value="">Current player</option>{players.map(player => <option key={player.id} value={player.id}>{player.name} - {player.status}</option>)}</select></div>
                 <div><label style={{ display: "block", fontSize: 12, fontWeight: 700, color: theme.muted, marginBottom: 6 }}>Edit Sold Price</label><input type="number" value={editPrice} onChange={e => setEditPrice(e.target.value)} placeholder="New price" style={inputStyle} /></div>
                 <button onClick={editSale} style={{ padding: "12px 16px", borderRadius: 10, border: "none", background: theme.accent, color: "white", fontWeight: 800, cursor: "pointer" }}>Update Price</button>
