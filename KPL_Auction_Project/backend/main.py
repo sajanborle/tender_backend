@@ -16,6 +16,7 @@ from models import Player, Team, User
 
 app = FastAPI()
 clients = []
+broadcast_loop = None
 
 Base.metadata.create_all(bind=engine)
 
@@ -202,10 +203,25 @@ async def broadcast_snapshot(db):
             clients.remove(client)
 
 
+@app.on_event("startup")
+async def capture_broadcast_loop():
+    global broadcast_loop
+    broadcast_loop = asyncio.get_running_loop()
+
+
+async def broadcast_snapshot_safe():
+    db = SessionLocal()
+    try:
+        await broadcast_snapshot(db)
+    finally:
+        db.close()
+
+
 def push_update(db, event):
     auction_state["event"] = event
     auction_state["updated_at"] = utc_now_iso()
-    asyncio.create_task(broadcast_snapshot(db))
+    if broadcast_loop:
+        asyncio.run_coroutine_threadsafe(broadcast_snapshot_safe(), broadcast_loop)
 
 
 def validate_team_budget(team, price):
