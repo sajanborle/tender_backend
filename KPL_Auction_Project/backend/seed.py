@@ -96,7 +96,7 @@ players = [
 ("Abhi Borle","A2",100),
 ("Tejas Kasrung","A2",100),
 ("Sahil Bhuvad","A2",100),
-("Akshay Kobnak","A2",100),
+("Akshay Kobnak Motha","A2",100),
 ("Rakesh Kobnak","A2",100),
 
 # A3
@@ -141,9 +141,9 @@ players = [
 # C1
 ("Prathamesh Dhadve","C1",100),
 ("Tanoj Kobnak","C1",100),
-("Bhavesh Kasrung","C1",100),
+("Bhavesh Kasrung Chota","C1",100),
 ("Ketan Kobnak","C1",100),
-("Suchit Shigwan","C1",100),
+("Suchit Shigwan Chota","C1",100),
 ("Pranav Kobnak","C1",100),
 ("Rohit Kasrung","C1",100),
 
@@ -214,6 +214,35 @@ players = [
 ("Ravindra Shigwan","D",100),
 ("Aryan Ambekar","D",100),
 ("Darshan Kasrung","D",100),
+("Rudra Chavan","D",100),
+("Bhavesh Kasrung Motha","D",100),
+("Suchit Shigwan Motha","D",100),
+("Akshay Kobnak Chota","D",100),
+("Prem Kasrung","D",100),
+("Chaitanya Chavan","D",100),
+("Shubham Chachle","D",100),
+("Sangam Sawant","D",100),
+("Shubham Sawant","D",100),
+("Abhimanyu Shigwan","D",100),
+("Ansh Shigwan","D",100),
+("Deep Karandekar","D",100),
+("Sahilesh Chavan","D",100),
+("Sanket Kobnak","D",100),
+("Pritesh Javlekar","D",100),
+("Santosh Kobank","D",100),
+("Vishal Kasrung","D",100),
+("Abishek Kobnak","D",100),
+("Rohit Kobnak","D",100),
+("Rajat Javlekar","D",100),
+("Praful Pawar","D",100),
+
+
+
+
+
+
+
+
 
 ]
 
