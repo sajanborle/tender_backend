@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-const BASE_URL = "https://bf72-223-228-58-35.ngrok-free.app";
+const BASE_URL = "https://5a5f-2401-4900-abb0-2180-cc36-fc7c-96a8-f2c0.ngrok-free.app ";
 const TIMER_SECONDS = 10;
 const BIG_POINTS_THRESHOLD = 300;
 
